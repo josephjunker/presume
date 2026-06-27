@@ -59,11 +59,11 @@ class IntProducer implements Producer<Integer> {
                             yield (int) (ratio * negativeRange) + anchor;
                         }
                     }
-                    case Edge1(_) -> minimum;
-                    case Edge2(_) -> approaching - 1;
-                    case Edge3(_) -> approaching;
-                    case Edge4(_) -> approaching + 1;
-                    case Edge5(_) -> maximum;
+                    case Edge(float ratio, boolean sign) -> {
+                        if (ratio < 0.3) yield approaching;
+                        if (ratio < 0.6) yield sign ? approaching - 1 : approaching + 1;
+                        yield sign ? minimum : maximum;
+                    }
                 },
                 minimum,
                 maximum);
