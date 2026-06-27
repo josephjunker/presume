@@ -4,45 +4,48 @@ import tech.jnkr.presume.utilities.RoseTree;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 import java.util.stream.Collectors;
 
 class RecordingSource implements GenerationSource {
 
-    private final List<PrimitiveDraw> history = new ArrayList<>();
+    private final AtomSource atomSource = new AtomSource();
+    private final List<DrawAtom> history = new ArrayList<>();
     private final List<RecordingSource> children = new ArrayList<>();
-    private final Random random = new Random();
 
-    RecordingSource() {}
+    private final BooleanProducer booleanProducer = new BooleanProducer();
+    private final IntegerProducer integerProducer = new IntegerProducer();
+    private final LongProducer longProducer = new LongProducer();
+    private final FloatProducer floatProducer = new FloatProducer();
+    private final DoubleProducer doubleProducer = new DoubleProducer();
 
-    public boolean genBoolean() {
-        boolean result = random.nextBoolean();
-        history.add(new BooleanDraw(result));
-        return result;
+    public boolean getBoolean() {
+        DrawAtom atom = atomSource.getAtom();
+        history.add(atom);
+        return booleanProducer.produce(atom);
     }
 
-    public int genInt() {
-        int result = random.nextInt();
-        history.add(new IntDraw(result));
-        return result;
+    public int getInteger() {
+        DrawAtom atom = atomSource.getAtom();
+        history.add(atom);
+        return integerProducer.produce(atom);
     }
 
-    public float genFloat() {
-        float result = random.nextFloat();
-        history.add(new FloatDraw(result));
-        return result;
+    public long getLong() {
+        DrawAtom atom = atomSource.getAtom();
+        history.add(atom);
+        return longProducer.produce(atom);
     }
 
-    public double genDouble() {
-        double result = random.nextDouble();
-        history.add(new DoubleDraw(result));
-        return result;
+    public float getFloat() {
+        DrawAtom atom = atomSource.getAtom();
+        history.add(atom);
+        return floatProducer.produce(atom);
     }
 
-    public long genLong() {
-        long result = random.nextLong();
-        history.add(new LongDraw(result));
-        return result;
+    public double getDouble() {
+        DrawAtom atom = atomSource.getAtom();
+        history.add(atom);
+        return doubleProducer.produce(atom);
     }
 
     public <T> T call(Generator<T> generator) {
@@ -51,7 +54,7 @@ class RecordingSource implements GenerationSource {
         return generator.gen(childSource);
     }
 
-    public RoseTree<List<PrimitiveDraw>> getHistory() {
+    public RoseTree<List<DrawAtom>> getHistory() {
         // TODO: stack safety
         return new RoseTree<>(
                 this.history,

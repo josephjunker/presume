@@ -2,39 +2,39 @@ package tech.jnkr.presume;
 
 import tech.jnkr.presume.exceptions.InvalidGeneratorException;
 
-class IntProducer implements Producer<Integer> {
+class IntegerProducer implements Producer<Integer> {
     private final int minimum;
     private final int maximum;
     private final int approaching;
 
-    public IntProducer() {
+    public IntegerProducer() {
         minimum = Integer.MIN_VALUE;
         maximum = Integer.MAX_VALUE;
         approaching = 0;
     }
 
-    public IntProducer(int minimum, int maximum) {
+    public IntegerProducer(int minimum, int maximum) {
         this.minimum = minimum;
         this.maximum = maximum;
         approaching = 0;
     }
 
-    private IntProducer(int minimum, int maximum, int approaching) {
+    private IntegerProducer(int minimum, int maximum, int approaching) {
         this.minimum = minimum;
         this.maximum = maximum;
         this.approaching = approaching;
     }
 
-    public IntProducer withMinimum(int minimum) {
-        return new IntProducer(minimum, maximum);
+    public IntegerProducer withMinimum(int minimum) {
+        return new IntegerProducer(minimum, maximum);
     }
 
-    public IntProducer withMaximum(int maximum) {
-        return new IntProducer(minimum, maximum);
+    public IntegerProducer withMaximum(int maximum) {
+        return new IntegerProducer(minimum, maximum);
     }
 
-    public IntProducer shrinkingTowards(int approaching) {
-        return new IntProducer(minimum, maximum, approaching);
+    public IntegerProducer shrinkingTowards(int approaching) {
+        return new IntegerProducer(minimum, maximum, approaching);
     }
 
     public Integer produce(DrawAtom atom) {

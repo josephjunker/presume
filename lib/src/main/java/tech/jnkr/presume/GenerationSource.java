@@ -1,15 +1,15 @@
 package tech.jnkr.presume;
 
 public interface GenerationSource {
-    public boolean genBoolean();
+    public boolean getBoolean();
 
-    public int genInt();
+    public int getInteger();
 
-    public float genFloat();
+    public float getFloat();
 
-    public double genDouble();
+    public double getDouble();
 
-    public long genLong();
+    public long getLong();
 
     public <T> T call(Generator<T> generator);
 }
