@@ -6,6 +6,6 @@ import tech.jnkr.presume.Generator;
 public class ExampleGenerator extends Generator<Boolean> {
     @Override
     protected Boolean gen(GenerationSource drawer) {
-        return drawer.genBoolean();
+        return drawer.getBoolean();
     }
 }
