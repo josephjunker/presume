@@ -11,11 +11,11 @@ public class ReplayingSource implements GenerationSource {
     private int index;
     private int childIndex;
 
-    private final BooleanProducer booleanProducer = new BooleanProducer();
-    private final IntegerProducer integerProducer = new IntegerProducer();
-    private final LongProducer longProducer = new LongProducer();
-    private final FloatProducer floatProducer = new FloatProducer();
-    private final DoubleProducer doubleProducer = new DoubleProducer();
+    private final BooleanProducer booleanProducer = new BooleanProducer(this::getAtom);
+    private final IntegerProducer integerProducer = new IntegerProducer(this::getAtom);
+    private final LongProducer longProducer = new LongProducer(this::getAtom);
+    private final FloatProducer floatProducer = new FloatProducer(this::getAtom);
+    private final DoubleProducer doubleProducer = new DoubleProducer(this::getAtom);
 
     ReplayingSource(RoseTree<List<DrawAtom>> history) {
         this.history = history;
@@ -31,23 +31,43 @@ public class ReplayingSource implements GenerationSource {
     }
 
     public boolean getBoolean() {
-        return booleanProducer.produce(getAtom());
+        return booleanProducer.gen();
+    }
+
+    public BooleanProducer booleanGen() {
+        return booleanProducer;
     }
 
     public int getInteger() {
-        return integerProducer.produce(getAtom());
+        return integerProducer.gen();
     }
 
-    public float getFloat() {
-        return floatProducer.produce(getAtom());
-    }
-
-    public double getDouble() {
-        return doubleProducer.produce(getAtom());
+    public IntegerProducer integerGen() {
+        return integerProducer;
     }
 
     public long getLong() {
-        return longProducer.produce(getAtom());
+        return longProducer.gen();
+    }
+
+    public LongProducer longGen() {
+        return longProducer;
+    }
+
+    public float getFloat() {
+        return floatProducer.gen();
+    }
+
+    public FloatProducer floatGen() {
+        return floatProducer;
+    }
+
+    public double getDouble() {
+        return doubleProducer.gen();
+    }
+
+    public DoubleProducer doubleGen() {
+        return doubleProducer;
     }
 
     public <T> T call(Generator<T> generator) {

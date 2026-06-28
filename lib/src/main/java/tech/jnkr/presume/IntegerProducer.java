@@ -2,42 +2,42 @@ package tech.jnkr.presume;
 
 import tech.jnkr.presume.exceptions.InvalidGeneratorException;
 
-class IntegerProducer implements Producer<Integer> {
+import java.util.function.Supplier;
+
+public class IntegerProducer implements Producer<Integer> {
     private final int minimum;
     private final int maximum;
     private final int approaching;
+    private final Supplier<DrawAtom> atomSupplier;
 
-    public IntegerProducer() {
+    IntegerProducer(Supplier<DrawAtom> atomSupplier) {
+        this.atomSupplier = atomSupplier;
         minimum = Integer.MIN_VALUE;
         maximum = Integer.MAX_VALUE;
         approaching = 0;
     }
 
-    public IntegerProducer(int minimum, int maximum) {
-        this.minimum = minimum;
-        this.maximum = maximum;
-        approaching = 0;
-    }
-
-    private IntegerProducer(int minimum, int maximum, int approaching) {
+    private IntegerProducer(
+            Supplier<DrawAtom> atomSupplier, int minimum, int maximum, int approaching) {
+        this.atomSupplier = atomSupplier;
         this.minimum = minimum;
         this.maximum = maximum;
         this.approaching = approaching;
     }
 
     public IntegerProducer withMinimum(int minimum) {
-        return new IntegerProducer(minimum, maximum);
+        return new IntegerProducer(atomSupplier, minimum, maximum, approaching);
     }
 
     public IntegerProducer withMaximum(int maximum) {
-        return new IntegerProducer(minimum, maximum);
+        return new IntegerProducer(atomSupplier, minimum, maximum, approaching);
     }
 
     public IntegerProducer shrinkingTowards(int approaching) {
-        return new IntegerProducer(minimum, maximum, approaching);
+        return new IntegerProducer(atomSupplier, minimum, maximum, approaching);
     }
 
-    public Integer produce(DrawAtom atom) {
+    private Integer produce(DrawAtom atom) {
         if (minimum > maximum)
             throw new InvalidGeneratorException(
                     String.format(
@@ -47,8 +47,9 @@ class IntegerProducer implements Producer<Integer> {
 
         return Math.clamp(
                 switch (atom) {
-                    case Trivial1(), Trivial2() -> approaching;
-                    case Regular(float ratio, boolean sign, _) -> {
+                    case Trivial1() -> approaching;
+                    case Trivial2() -> approaching;
+                    case Regular(float ratio, boolean sign, boolean simplify) -> {
                         if (sign) {
                             int anchor = Math.max(approaching, minimum);
                             int positiveRange = maximum - anchor;
@@ -67,5 +68,9 @@ class IntegerProducer implements Producer<Integer> {
                 },
                 minimum,
                 maximum);
+    }
+
+    public Integer gen() {
+        return produce(atomSupplier.get());
     }
 }

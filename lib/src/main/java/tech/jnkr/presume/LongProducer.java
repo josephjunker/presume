@@ -2,36 +2,46 @@ package tech.jnkr.presume;
 
 import tech.jnkr.presume.exceptions.InvalidGeneratorException;
 
-class LongProducer implements Producer<Long> {
+import java.util.function.Supplier;
+
+public class LongProducer implements Producer<Long> {
     private final long minimum;
     private final long maximum;
     private final long approaching;
+    private final Supplier<DrawAtom> atomSupplier;
 
-    public LongProducer() {
+    LongProducer(Supplier<DrawAtom> atomSupplier) {
+        this.atomSupplier = atomSupplier;
         minimum = (long) Math.floor(Long.MIN_VALUE / 2f);
         maximum = (long) Math.floor(Long.MAX_VALUE / 2f);
         approaching = 0;
     }
 
-    public LongProducer(long minimum, long maximum, long approaching) {
+    private LongProducer(
+            Supplier<DrawAtom> atomSupplier, long minimum, long maximum, long approaching) {
+        this.atomSupplier = atomSupplier;
         this.minimum = minimum;
         this.maximum = maximum;
         this.approaching = approaching;
     }
 
     public LongProducer withMinimum(long minimum) {
-        return new LongProducer(minimum, maximum, approaching);
+        return new LongProducer(atomSupplier, minimum, maximum, approaching);
     }
 
     public LongProducer withMaximum(long maximum) {
-        return new LongProducer(minimum, maximum, approaching);
+        return new LongProducer(atomSupplier, minimum, maximum, approaching);
     }
 
     public LongProducer shrinkingTowards(long target) {
-        return new LongProducer(minimum, maximum, target);
+        return new LongProducer(atomSupplier, minimum, maximum, target);
     }
 
-    public Long produce(DrawAtom atom) {
+    public Long gen() {
+        return produce(atomSupplier.get());
+    }
+
+    private Long produce(DrawAtom atom) {
         if (minimum < maximum)
             throw new InvalidGeneratorException(
                     String.format(
@@ -43,7 +53,7 @@ class LongProducer implements Producer<Long> {
                 switch (atom) {
                     case Trivial1() -> 0;
                     case Trivial2() -> 1;
-                    case Regular(float ratio, boolean sign, _) -> {
+                    case Regular(float ratio, boolean sign, boolean simplify) -> {
                         if (sign) {
                             long anchor = Math.max(approaching, minimum);
                             long positiveRange = maximum - anchor;

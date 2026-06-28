@@ -12,46 +12,70 @@ class RecordingSource implements GenerationSource {
     private final List<DrawAtom> history = new ArrayList<>();
     private final List<RecordingSource> children = new ArrayList<>();
 
-    private final BooleanProducer booleanProducer = new BooleanProducer();
-    private final IntegerProducer integerProducer = new IntegerProducer();
-    private final LongProducer longProducer = new LongProducer();
-    private final FloatProducer floatProducer = new FloatProducer();
-    private final DoubleProducer doubleProducer = new DoubleProducer();
+    private final BooleanProducer booleanProducer;
+    private final IntegerProducer integerProducer;
+    private final LongProducer longProducer;
+    private final FloatProducer floatProducer;
+    private final DoubleProducer doubleProducer;
+
+    public RecordingSource() {
+        booleanProducer = new BooleanProducer(this::getAtom);
+        integerProducer = new IntegerProducer(this::getAtom);
+        longProducer = new LongProducer(this::getAtom);
+        floatProducer = new FloatProducer(this::getAtom);
+        doubleProducer = new DoubleProducer(this::getAtom);
+    }
 
     public boolean getBoolean() {
-        DrawAtom atom = atomSource.getAtom();
-        history.add(atom);
-        return booleanProducer.produce(atom);
+        return booleanProducer.gen();
+    }
+
+    public BooleanProducer booleanGen() {
+        return booleanProducer;
     }
 
     public int getInteger() {
-        DrawAtom atom = atomSource.getAtom();
-        history.add(atom);
-        return integerProducer.produce(atom);
+        return integerProducer.gen();
+    }
+
+    public IntegerProducer integerGen() {
+        return integerProducer;
     }
 
     public long getLong() {
-        DrawAtom atom = atomSource.getAtom();
-        history.add(atom);
-        return longProducer.produce(atom);
+        return longProducer.gen();
+    }
+
+    public LongProducer longGen() {
+        return longProducer;
     }
 
     public float getFloat() {
-        DrawAtom atom = atomSource.getAtom();
-        history.add(atom);
-        return floatProducer.produce(atom);
+        return floatProducer.gen();
+    }
+
+    public FloatProducer floatGen() {
+        return floatProducer;
     }
 
     public double getDouble() {
-        DrawAtom atom = atomSource.getAtom();
-        history.add(atom);
-        return doubleProducer.produce(atom);
+        return doubleProducer.gen();
+    }
+
+    public DoubleProducer doubleGen() {
+        return doubleProducer;
     }
 
     public <T> T call(Generator<T> generator) {
         RecordingSource childSource = new RecordingSource();
         children.add(childSource);
         return generator.gen(childSource);
+    }
+
+    DrawAtom getAtom() {
+        DrawAtom atom = atomSource.getAtom();
+        history.add(atom);
+        return atom;
     }
 
     public RoseTree<List<DrawAtom>> getHistory() {

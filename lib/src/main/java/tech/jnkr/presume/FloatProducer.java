@@ -2,14 +2,18 @@ package tech.jnkr.presume;
 
 import tech.jnkr.presume.exceptions.InvalidGeneratorException;
 
-class FloatProducer implements Producer<Float> {
+import java.util.function.Supplier;
+
+public class FloatProducer implements Producer<Float> {
     private final float minimum;
     private final float maximum;
     private final float approaching;
     private final boolean allowNaN;
     private final boolean allowInfinity;
+    private Supplier<DrawAtom> atomSupplier;
 
-    public FloatProducer() {
+    FloatProducer(Supplier<DrawAtom> atomSupplier) {
+        this.atomSupplier = atomSupplier;
         minimum = -Float.MAX_VALUE / 2f;
         maximum = Float.MAX_VALUE / 2f;
         approaching = 0f;
@@ -17,12 +21,14 @@ class FloatProducer implements Producer<Float> {
         allowInfinity = true;
     }
 
-    public FloatProducer(
+    private FloatProducer(
+            Supplier<DrawAtom> atomSupplier,
             float minimum,
             float maximum,
             float approaching,
             boolean allowNaN,
             boolean allowInfinity) {
+        this.atomSupplier = atomSupplier;
         this.minimum = minimum;
         this.maximum = maximum;
         this.approaching = approaching;
@@ -31,34 +37,41 @@ class FloatProducer implements Producer<Float> {
     }
 
     public FloatProducer withMinimum(float minimum) {
-        return new FloatProducer(minimum, maximum, approaching, allowNaN, allowInfinity);
+        return new FloatProducer(
+                atomSupplier, minimum, maximum, approaching, allowNaN, allowInfinity);
     }
 
     public FloatProducer withMaximum(float maximum) {
-        return new FloatProducer(minimum, maximum, approaching, allowNaN, allowInfinity);
+        return new FloatProducer(
+                atomSupplier, minimum, maximum, approaching, allowNaN, allowInfinity);
     }
 
     public FloatProducer shrinkingTowards(float approaching) {
-        return new FloatProducer(minimum, maximum, approaching, allowNaN, allowInfinity);
+        return new FloatProducer(
+                atomSupplier, minimum, maximum, approaching, allowNaN, allowInfinity);
     }
 
     public FloatProducer allowNaN() {
-        return new FloatProducer(minimum, maximum, approaching, true, allowInfinity);
+        return new FloatProducer(atomSupplier, minimum, maximum, approaching, true, allowInfinity);
     }
 
     public FloatProducer disallowNaN() {
-        return new FloatProducer(minimum, maximum, approaching, false, allowInfinity);
+        return new FloatProducer(atomSupplier, minimum, maximum, approaching, false, allowInfinity);
     }
 
     public FloatProducer allowInfinity() {
-        return new FloatProducer(minimum, maximum, approaching, allowNaN, true);
+        return new FloatProducer(atomSupplier, minimum, maximum, approaching, allowNaN, true);
     }
 
     public FloatProducer disallowInfinity() {
-        return new FloatProducer(minimum, maximum, approaching, allowNaN, false);
+        return new FloatProducer(atomSupplier, minimum, maximum, approaching, allowNaN, false);
     }
 
-    public Float produce(DrawAtom atom) {
+    public Float gen() {
+        return produce(atomSupplier.get());
+    }
+
+    private Float produce(DrawAtom atom) {
         if (minimum < maximum)
             throw new InvalidGeneratorException(
                     String.format(

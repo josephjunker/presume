@@ -2,14 +2,18 @@ package tech.jnkr.presume;
 
 import tech.jnkr.presume.exceptions.InvalidGeneratorException;
 
-class DoubleProducer implements Producer<Double> {
+import java.util.function.Supplier;
+
+public class DoubleProducer implements Producer<Double> {
     private final double minimum;
     private final double maximum;
     private final double approaching;
     private final boolean allowNaN;
     private final boolean allowInfinity;
+    private final Supplier<DrawAtom> atomSupplier;
 
-    public DoubleProducer() {
+    DoubleProducer(Supplier<DrawAtom> atomSupplier) {
+        this.atomSupplier = atomSupplier;
         minimum = -Double.MAX_VALUE / 2f;
         maximum = Double.MAX_VALUE / 2f;
         approaching = 0f;
@@ -17,12 +21,14 @@ class DoubleProducer implements Producer<Double> {
         allowInfinity = true;
     }
 
-    public DoubleProducer(
+    private DoubleProducer(
+            Supplier<DrawAtom> atomSupplier,
             double minimum,
             double maximum,
             double approaching,
             boolean allowNaN,
             boolean allowInfinity) {
+        this.atomSupplier = atomSupplier;
         this.minimum = minimum;
         this.maximum = maximum;
         this.approaching = approaching;
@@ -31,34 +37,42 @@ class DoubleProducer implements Producer<Double> {
     }
 
     public DoubleProducer withMinimum(double minimum) {
-        return new DoubleProducer(minimum, maximum, approaching, allowNaN, allowInfinity);
+        return new DoubleProducer(
+                atomSupplier, minimum, maximum, approaching, allowNaN, allowInfinity);
     }
 
     public DoubleProducer withMaximum(double maximum) {
-        return new DoubleProducer(minimum, maximum, approaching, allowNaN, allowInfinity);
+        return new DoubleProducer(
+                atomSupplier, minimum, maximum, approaching, allowNaN, allowInfinity);
     }
 
     public DoubleProducer shrinkingTowards(double approaching) {
-        return new DoubleProducer(minimum, maximum, approaching, allowNaN, allowInfinity);
+        return new DoubleProducer(
+                atomSupplier, minimum, maximum, approaching, allowNaN, allowInfinity);
     }
 
     public DoubleProducer allowNaN() {
-        return new DoubleProducer(minimum, maximum, approaching, true, allowInfinity);
+        return new DoubleProducer(atomSupplier, minimum, maximum, approaching, true, allowInfinity);
     }
 
     public DoubleProducer disallowNaN() {
-        return new DoubleProducer(minimum, maximum, approaching, false, allowInfinity);
+        return new DoubleProducer(
+                atomSupplier, minimum, maximum, approaching, false, allowInfinity);
     }
 
     public DoubleProducer allowInfinity() {
-        return new DoubleProducer(minimum, maximum, approaching, allowNaN, true);
+        return new DoubleProducer(atomSupplier, minimum, maximum, approaching, allowNaN, true);
     }
 
     public DoubleProducer disallowInfinity() {
-        return new DoubleProducer(minimum, maximum, approaching, allowNaN, false);
+        return new DoubleProducer(atomSupplier, minimum, maximum, approaching, allowNaN, false);
     }
 
-    public Double produce(DrawAtom atom) {
+    public Double gen() {
+        return produce(atomSupplier.get());
+    }
+
+    private Double produce(DrawAtom atom) {
         if (minimum < maximum)
             throw new InvalidGeneratorException(
                     String.format(
