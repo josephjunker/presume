@@ -3,23 +3,23 @@ package tech.jnkr.presume;
 public interface GenerationSource {
     boolean getBoolean();
 
-    BooleanProducer booleanGen();
+    BooleanGenerator booleanGen();
 
     int getInteger();
 
-    IntegerProducer integerGen();
+    IntegerGenerator integerGen();
 
     float getFloat();
 
-    FloatProducer floatGen();
+    FloatGenerator floatGen();
 
     double getDouble();
 
-    DoubleProducer doubleGen();
+    DoubleGenerator doubleGen();
 
     long getLong();
 
-    LongProducer longGen();
+    LongGenerator longGen();
 
     <T> T call(Generator<T> generator);
 }

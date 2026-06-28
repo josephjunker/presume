@@ -4,20 +4,20 @@ import tech.jnkr.presume.exceptions.InvalidGeneratorException;
 
 import java.util.function.Supplier;
 
-public class IntegerProducer implements Producer<Integer> {
+public class IntegerGenerator implements SimpleGenerator<Integer> {
     private final int minimum;
     private final int maximum;
     private final int approaching;
     private final Supplier<DrawAtom> atomSupplier;
 
-    IntegerProducer(Supplier<DrawAtom> atomSupplier) {
+    IntegerGenerator(Supplier<DrawAtom> atomSupplier) {
         this.atomSupplier = atomSupplier;
         minimum = Integer.MIN_VALUE;
         maximum = Integer.MAX_VALUE;
         approaching = 0;
     }
 
-    private IntegerProducer(
+    private IntegerGenerator(
             Supplier<DrawAtom> atomSupplier, int minimum, int maximum, int approaching) {
         this.atomSupplier = atomSupplier;
         this.minimum = minimum;
@@ -25,16 +25,16 @@ public class IntegerProducer implements Producer<Integer> {
         this.approaching = approaching;
     }
 
-    public IntegerProducer withMinimum(int minimum) {
-        return new IntegerProducer(atomSupplier, minimum, maximum, approaching);
+    public IntegerGenerator withMinimum(int minimum) {
+        return new IntegerGenerator(atomSupplier, minimum, maximum, approaching);
     }
 
-    public IntegerProducer withMaximum(int maximum) {
-        return new IntegerProducer(atomSupplier, minimum, maximum, approaching);
+    public IntegerGenerator withMaximum(int maximum) {
+        return new IntegerGenerator(atomSupplier, minimum, maximum, approaching);
     }
 
-    public IntegerProducer shrinkingTowards(int approaching) {
-        return new IntegerProducer(atomSupplier, minimum, maximum, approaching);
+    public IntegerGenerator shrinkingTowards(int approaching) {
+        return new IntegerGenerator(atomSupplier, minimum, maximum, approaching);
     }
 
     private Integer produce(DrawAtom atom) {

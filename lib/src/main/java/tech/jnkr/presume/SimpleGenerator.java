@@ -1,5 +1,5 @@
 package tech.jnkr.presume;
 
-interface Producer<T> {
+interface SimpleGenerator<T> {
     T gen();
 }

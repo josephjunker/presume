@@ -4,20 +4,20 @@ import tech.jnkr.presume.exceptions.InvalidGeneratorException;
 
 import java.util.function.Supplier;
 
-public class LongProducer implements Producer<Long> {
+public class LongGenerator implements SimpleGenerator<Long> {
     private final long minimum;
     private final long maximum;
     private final long approaching;
     private final Supplier<DrawAtom> atomSupplier;
 
-    LongProducer(Supplier<DrawAtom> atomSupplier) {
+    LongGenerator(Supplier<DrawAtom> atomSupplier) {
         this.atomSupplier = atomSupplier;
         minimum = (long) Math.floor(Long.MIN_VALUE / 2f);
         maximum = (long) Math.floor(Long.MAX_VALUE / 2f);
         approaching = 0;
     }
 
-    private LongProducer(
+    private LongGenerator(
             Supplier<DrawAtom> atomSupplier, long minimum, long maximum, long approaching) {
         this.atomSupplier = atomSupplier;
         this.minimum = minimum;
@@ -25,16 +25,16 @@ public class LongProducer implements Producer<Long> {
         this.approaching = approaching;
     }
 
-    public LongProducer withMinimum(long minimum) {
-        return new LongProducer(atomSupplier, minimum, maximum, approaching);
+    public LongGenerator withMinimum(long minimum) {
+        return new LongGenerator(atomSupplier, minimum, maximum, approaching);
     }
 
-    public LongProducer withMaximum(long maximum) {
-        return new LongProducer(atomSupplier, minimum, maximum, approaching);
+    public LongGenerator withMaximum(long maximum) {
+        return new LongGenerator(atomSupplier, minimum, maximum, approaching);
     }
 
-    public LongProducer shrinkingTowards(long target) {
-        return new LongProducer(atomSupplier, minimum, maximum, target);
+    public LongGenerator shrinkingTowards(long target) {
+        return new LongGenerator(atomSupplier, minimum, maximum, target);
     }
 
     public Long gen() {

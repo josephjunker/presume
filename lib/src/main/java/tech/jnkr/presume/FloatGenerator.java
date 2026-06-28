@@ -4,28 +4,28 @@ import tech.jnkr.presume.exceptions.InvalidGeneratorException;
 
 import java.util.function.Supplier;
 
-public class DoubleProducer implements Producer<Double> {
-    private final double minimum;
-    private final double maximum;
-    private final double approaching;
+public class FloatGenerator implements SimpleGenerator<Float> {
+    private final float minimum;
+    private final float maximum;
+    private final float approaching;
     private final boolean allowNaN;
     private final boolean allowInfinity;
-    private final Supplier<DrawAtom> atomSupplier;
+    private Supplier<DrawAtom> atomSupplier;
 
-    DoubleProducer(Supplier<DrawAtom> atomSupplier) {
+    FloatGenerator(Supplier<DrawAtom> atomSupplier) {
         this.atomSupplier = atomSupplier;
-        minimum = -Double.MAX_VALUE / 2f;
-        maximum = Double.MAX_VALUE / 2f;
+        minimum = -Float.MAX_VALUE / 2f;
+        maximum = Float.MAX_VALUE / 2f;
         approaching = 0f;
         allowNaN = true;
         allowInfinity = true;
     }
 
-    private DoubleProducer(
+    private FloatGenerator(
             Supplier<DrawAtom> atomSupplier,
-            double minimum,
-            double maximum,
-            double approaching,
+            float minimum,
+            float maximum,
+            float approaching,
             boolean allowNaN,
             boolean allowInfinity) {
         this.atomSupplier = atomSupplier;
@@ -36,54 +36,53 @@ public class DoubleProducer implements Producer<Double> {
         this.allowInfinity = allowInfinity;
     }
 
-    public DoubleProducer withMinimum(double minimum) {
-        return new DoubleProducer(
+    public FloatGenerator withMinimum(float minimum) {
+        return new FloatGenerator(
                 atomSupplier, minimum, maximum, approaching, allowNaN, allowInfinity);
     }
 
-    public DoubleProducer withMaximum(double maximum) {
-        return new DoubleProducer(
+    public FloatGenerator withMaximum(float maximum) {
+        return new FloatGenerator(
                 atomSupplier, minimum, maximum, approaching, allowNaN, allowInfinity);
     }
 
-    public DoubleProducer shrinkingTowards(double approaching) {
-        return new DoubleProducer(
+    public FloatGenerator shrinkingTowards(float approaching) {
+        return new FloatGenerator(
                 atomSupplier, minimum, maximum, approaching, allowNaN, allowInfinity);
     }
 
-    public DoubleProducer allowNaN() {
-        return new DoubleProducer(atomSupplier, minimum, maximum, approaching, true, allowInfinity);
+    public FloatGenerator allowNaN() {
+        return new FloatGenerator(atomSupplier, minimum, maximum, approaching, true, allowInfinity);
     }
 
-    public DoubleProducer disallowNaN() {
-        return new DoubleProducer(
-                atomSupplier, minimum, maximum, approaching, false, allowInfinity);
+    public FloatGenerator disallowNaN() {
+        return new FloatGenerator(atomSupplier, minimum, maximum, approaching, false, allowInfinity);
     }
 
-    public DoubleProducer allowInfinity() {
-        return new DoubleProducer(atomSupplier, minimum, maximum, approaching, allowNaN, true);
+    public FloatGenerator allowInfinity() {
+        return new FloatGenerator(atomSupplier, minimum, maximum, approaching, allowNaN, true);
     }
 
-    public DoubleProducer disallowInfinity() {
-        return new DoubleProducer(atomSupplier, minimum, maximum, approaching, allowNaN, false);
+    public FloatGenerator disallowInfinity() {
+        return new FloatGenerator(atomSupplier, minimum, maximum, approaching, allowNaN, false);
     }
 
-    public Double gen() {
+    public Float gen() {
         return produce(atomSupplier.get());
     }
 
-    private Double produce(DrawAtom atom) {
+    private Float produce(DrawAtom atom) {
         if (minimum < maximum)
             throw new InvalidGeneratorException(
                     String.format(
-                            "Encountered a Double generator with a minimum greater than its"
+                            "Encountered a Float generator with a minimum greater than its"
                                     + " maximum. Minimum value: %f, maximum value: %f",
                             minimum, maximum));
 
-        double result =
+        float result =
                 switch (atom) {
-                    case Trivial1() -> 0;
-                    case Trivial2() -> 1;
+                    case Trivial1() -> 0f;
+                    case Trivial2() -> 1f;
                     case Regular(float ratio, boolean sign, boolean simplify) ->
                             this.generateFromRatio(ratio, sign, simplify);
                     case Edge(float ratio, boolean sign) -> {
@@ -104,17 +103,17 @@ public class DoubleProducer implements Producer<Double> {
         return result;
     }
 
-    private double generateFromRatio(float ratio, boolean sign, boolean simplify) {
+    private float generateFromRatio(float ratio, boolean sign, boolean simplify) {
         if (sign) {
-            double anchor = Math.max(approaching, minimum);
-            double positiveRange = maximum - anchor;
-            double value = (ratio * positiveRange) + anchor;
-            return simplify ? Math.floor(value) : value;
+            float anchor = Math.max(approaching, minimum);
+            float positiveRange = maximum - anchor;
+            float value = (ratio * positiveRange) + anchor;
+            return simplify ? (float) Math.floor(value) : value;
         } else {
-            double anchor = Math.min(approaching, maximum);
-            double negativeRange = minimum - anchor;
-            double value = (ratio * negativeRange) + anchor;
-            return simplify ? Math.floor(value) : value;
+            float anchor = Math.min(approaching, maximum);
+            float negativeRange = minimum - anchor;
+            float value = (ratio * negativeRange) + anchor;
+            return simplify ? (float) Math.floor(value) : value;
         }
     }
 }

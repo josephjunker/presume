@@ -12,58 +12,58 @@ class RecordingSource implements GenerationSource {
     private final List<DrawAtom> history = new ArrayList<>();
     private final List<RecordingSource> children = new ArrayList<>();
 
-    private final BooleanProducer booleanProducer;
-    private final IntegerProducer integerProducer;
-    private final LongProducer longProducer;
-    private final FloatProducer floatProducer;
-    private final DoubleProducer doubleProducer;
+    private final BooleanGenerator booleanGenerator;
+    private final IntegerGenerator integerGenerator;
+    private final LongGenerator longGenerator;
+    private final FloatGenerator floatGenerator;
+    private final DoubleGenerator doubleGenerator;
 
     public RecordingSource() {
-        booleanProducer = new BooleanProducer(this::getAtom);
-        integerProducer = new IntegerProducer(this::getAtom);
-        longProducer = new LongProducer(this::getAtom);
-        floatProducer = new FloatProducer(this::getAtom);
-        doubleProducer = new DoubleProducer(this::getAtom);
+        booleanGenerator = new BooleanGenerator(this::getAtom);
+        integerGenerator = new IntegerGenerator(this::getAtom);
+        longGenerator = new LongGenerator(this::getAtom);
+        floatGenerator = new FloatGenerator(this::getAtom);
+        doubleGenerator = new DoubleGenerator(this::getAtom);
     }
 
     public boolean getBoolean() {
-        return booleanProducer.gen();
+        return booleanGenerator.gen();
     }
 
-    public BooleanProducer booleanGen() {
-        return booleanProducer;
+    public BooleanGenerator booleanGen() {
+        return booleanGenerator;
     }
 
     public int getInteger() {
-        return integerProducer.gen();
+        return integerGenerator.gen();
     }
 
-    public IntegerProducer integerGen() {
-        return integerProducer;
+    public IntegerGenerator integerGen() {
+        return integerGenerator;
     }
 
     public long getLong() {
-        return longProducer.gen();
+        return longGenerator.gen();
     }
 
-    public LongProducer longGen() {
-        return longProducer;
+    public LongGenerator longGen() {
+        return longGenerator;
     }
 
     public float getFloat() {
-        return floatProducer.gen();
+        return floatGenerator.gen();
     }
 
-    public FloatProducer floatGen() {
-        return floatProducer;
+    public FloatGenerator floatGen() {
+        return floatGenerator;
     }
 
     public double getDouble() {
-        return doubleProducer.gen();
+        return doubleGenerator.gen();
     }
 
-    public DoubleProducer doubleGen() {
-        return doubleProducer;
+    public DoubleGenerator doubleGen() {
+        return doubleGenerator;
     }
 
     public <T> T call(Generator<T> generator) {

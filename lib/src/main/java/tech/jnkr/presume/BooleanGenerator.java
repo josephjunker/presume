@@ -2,22 +2,22 @@ package tech.jnkr.presume;
 
 import java.util.function.Supplier;
 
-public class BooleanProducer implements Producer<Boolean> {
+public class BooleanGenerator implements SimpleGenerator<Boolean> {
     private final Supplier<DrawAtom> atomSupplier;
     private final boolean shrinkTowards;
 
-    BooleanProducer(Supplier<DrawAtom> atomSupplier) {
+    BooleanGenerator(Supplier<DrawAtom> atomSupplier) {
         this.atomSupplier = atomSupplier;
         shrinkTowards = false;
     }
 
-    private BooleanProducer(Supplier<DrawAtom> atomSupplier, boolean shrinkTowards) {
+    private BooleanGenerator(Supplier<DrawAtom> atomSupplier, boolean shrinkTowards) {
         this.atomSupplier = atomSupplier;
         this.shrinkTowards = shrinkTowards;
     }
 
-    public BooleanProducer shrinkTowards(boolean target) {
-        return new BooleanProducer(atomSupplier, target);
+    public BooleanGenerator shrinkTowards(boolean target) {
+        return new BooleanGenerator(atomSupplier, target);
     }
 
     public Boolean gen() {
