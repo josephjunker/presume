@@ -1,8 +1,8 @@
-package tech.jnkr.presume;
+package tech.jnkr.presume.internal.atoms;
 
 import java.util.stream.Stream;
 
-sealed interface DrawAtom permits Trivial1, Trivial2, Regular, Edge {
+public sealed interface DrawAtom permits Trivial1, Trivial2, Regular, Edge {
     default Stream<DrawAtom> shrink() {
         return switch (this) {
             case Trivial1() -> Stream.of();
@@ -41,11 +41,3 @@ sealed interface DrawAtom permits Trivial1, Trivial2, Regular, Edge {
         return Stream.of(new Regular(ratio, true, true), new Regular(ratio, false, true));
     }
 }
-
-record Trivial1() implements DrawAtom {}
-
-record Trivial2() implements DrawAtom {}
-
-record Regular(float ratio, boolean sign, boolean simplify) implements DrawAtom {}
-
-record Edge(float ratio, boolean sign) implements DrawAtom {}

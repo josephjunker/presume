@@ -1,6 +1,10 @@
 package tech.jnkr.presume;
 
-import tech.jnkr.presume.utilities.RoseTree;
+import tech.jnkr.presume.generators.*;
+import tech.jnkr.presume.internal.atoms.AtomSource;
+import tech.jnkr.presume.internal.atoms.DrawAtom;
+import tech.jnkr.presume.internal.generators.*;
+import tech.jnkr.presume.internal.utilities.RoseTree;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,18 +16,18 @@ class RecordingSource implements GenerationSource {
     private final List<DrawAtom> history = new ArrayList<>();
     private final List<RecordingSource> children = new ArrayList<>();
 
-    private final BooleanGenerator booleanGenerator;
-    private final IntegerGenerator integerGenerator;
-    private final LongGenerator longGenerator;
-    private final FloatGenerator floatGenerator;
-    private final DoubleGenerator doubleGenerator;
+    private final ConcreteBooleanGenerator booleanGenerator;
+    private final ConcreteIntegerGenerator integerGenerator;
+    private final ConcreteLongGenerator longGenerator;
+    private final ConcreteFloatGenerator floatGenerator;
+    private final ConcreteDoubleGenerator doubleGenerator;
 
     public RecordingSource() {
-        booleanGenerator = new BooleanGenerator(this::getAtom);
-        integerGenerator = new IntegerGenerator(this::getAtom);
-        longGenerator = new LongGenerator(this::getAtom);
-        floatGenerator = new FloatGenerator(this::getAtom);
-        doubleGenerator = new DoubleGenerator(this::getAtom);
+        booleanGenerator = new ConcreteBooleanGenerator(this::getAtom);
+        integerGenerator = new ConcreteIntegerGenerator(this::getAtom);
+        longGenerator = new ConcreteLongGenerator(this::getAtom);
+        floatGenerator = new ConcreteFloatGenerator(this::getAtom);
+        doubleGenerator = new ConcreteDoubleGenerator(this::getAtom);
     }
 
     public boolean getBoolean() {

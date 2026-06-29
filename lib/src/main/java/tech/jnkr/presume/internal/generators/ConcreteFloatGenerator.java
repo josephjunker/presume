@@ -1,18 +1,20 @@
-package tech.jnkr.presume;
+package tech.jnkr.presume.internal.generators;
 
 import tech.jnkr.presume.exceptions.InvalidGeneratorException;
+import tech.jnkr.presume.generators.FloatGenerator;
+import tech.jnkr.presume.internal.atoms.*;
 
 import java.util.function.Supplier;
 
-public class FloatGenerator implements SimpleGenerator<Float> {
+public class ConcreteFloatGenerator implements SimpleGenerator<Float>, FloatGenerator {
     private final float minimum;
     private final float maximum;
     private final float approaching;
     private final boolean allowNaN;
     private final boolean allowInfinity;
-    private Supplier<DrawAtom> atomSupplier;
+    private final Supplier<DrawAtom> atomSupplier;
 
-    FloatGenerator(Supplier<DrawAtom> atomSupplier) {
+    public ConcreteFloatGenerator(Supplier<DrawAtom> atomSupplier) {
         this.atomSupplier = atomSupplier;
         minimum = -Float.MAX_VALUE / 2f;
         maximum = Float.MAX_VALUE / 2f;
@@ -21,7 +23,7 @@ public class FloatGenerator implements SimpleGenerator<Float> {
         allowInfinity = true;
     }
 
-    private FloatGenerator(
+    private ConcreteFloatGenerator(
             Supplier<DrawAtom> atomSupplier,
             float minimum,
             float maximum,
@@ -36,37 +38,49 @@ public class FloatGenerator implements SimpleGenerator<Float> {
         this.allowInfinity = allowInfinity;
     }
 
-    public FloatGenerator withMinimum(float minimum) {
-        return new FloatGenerator(
+    @Override
+    public ConcreteFloatGenerator withMinimum(float minimum) {
+        return new ConcreteFloatGenerator(
                 atomSupplier, minimum, maximum, approaching, allowNaN, allowInfinity);
     }
 
-    public FloatGenerator withMaximum(float maximum) {
-        return new FloatGenerator(
+    @Override
+    public ConcreteFloatGenerator withMaximum(float maximum) {
+        return new ConcreteFloatGenerator(
                 atomSupplier, minimum, maximum, approaching, allowNaN, allowInfinity);
     }
 
-    public FloatGenerator shrinkingTowards(float approaching) {
-        return new FloatGenerator(
+    @Override
+    public ConcreteFloatGenerator shrinkingTowards(float approaching) {
+        return new ConcreteFloatGenerator(
                 atomSupplier, minimum, maximum, approaching, allowNaN, allowInfinity);
     }
 
-    public FloatGenerator allowNaN() {
-        return new FloatGenerator(atomSupplier, minimum, maximum, approaching, true, allowInfinity);
+    @Override
+    public ConcreteFloatGenerator allowNaN() {
+        return new ConcreteFloatGenerator(
+                atomSupplier, minimum, maximum, approaching, true, allowInfinity);
     }
 
-    public FloatGenerator disallowNaN() {
-        return new FloatGenerator(atomSupplier, minimum, maximum, approaching, false, allowInfinity);
+    @Override
+    public ConcreteFloatGenerator disallowNaN() {
+        return new ConcreteFloatGenerator(
+                atomSupplier, minimum, maximum, approaching, false, allowInfinity);
     }
 
-    public FloatGenerator allowInfinity() {
-        return new FloatGenerator(atomSupplier, minimum, maximum, approaching, allowNaN, true);
+    @Override
+    public ConcreteFloatGenerator allowInfinity() {
+        return new ConcreteFloatGenerator(
+                atomSupplier, minimum, maximum, approaching, allowNaN, true);
     }
 
-    public FloatGenerator disallowInfinity() {
-        return new FloatGenerator(atomSupplier, minimum, maximum, approaching, allowNaN, false);
+    @Override
+    public ConcreteFloatGenerator disallowInfinity() {
+        return new ConcreteFloatGenerator(
+                atomSupplier, minimum, maximum, approaching, allowNaN, false);
     }
 
+    @Override
     public Float gen() {
         return produce(atomSupplier.get());
     }

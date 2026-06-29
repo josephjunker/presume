@@ -1,7 +1,10 @@
 package tech.jnkr.presume;
 
 import tech.jnkr.presume.exceptions.SourceDepletedException;
-import tech.jnkr.presume.utilities.RoseTree;
+import tech.jnkr.presume.generators.*;
+import tech.jnkr.presume.internal.atoms.DrawAtom;
+import tech.jnkr.presume.internal.generators.*;
+import tech.jnkr.presume.internal.utilities.RoseTree;
 
 import java.util.List;
 
@@ -11,11 +14,14 @@ public class ReplayingSource implements GenerationSource {
     private int index;
     private int childIndex;
 
-    private final BooleanGenerator booleanGenerator = new BooleanGenerator(this::getAtom);
-    private final IntegerGenerator integerGenerator = new IntegerGenerator(this::getAtom);
-    private final LongGenerator longGenerator = new LongGenerator(this::getAtom);
-    private final FloatGenerator floatGenerator = new FloatGenerator(this::getAtom);
-    private final DoubleGenerator doubleGenerator = new DoubleGenerator(this::getAtom);
+    private final ConcreteBooleanGenerator booleanGenerator =
+            new ConcreteBooleanGenerator(this::getAtom);
+    private final ConcreteIntegerGenerator integerGenerator =
+            new ConcreteIntegerGenerator(this::getAtom);
+    private final ConcreteLongGenerator longGenerator = new ConcreteLongGenerator(this::getAtom);
+    private final ConcreteFloatGenerator floatGenerator = new ConcreteFloatGenerator(this::getAtom);
+    private final ConcreteDoubleGenerator doubleGenerator =
+            new ConcreteDoubleGenerator(this::getAtom);
 
     ReplayingSource(RoseTree<List<DrawAtom>> history) {
         this.history = history;
@@ -30,46 +36,57 @@ public class ReplayingSource implements GenerationSource {
         return atom;
     }
 
+    @Override
     public boolean getBoolean() {
         return booleanGenerator.gen();
     }
 
+    @Override
     public BooleanGenerator booleanGen() {
         return booleanGenerator;
     }
 
+    @Override
     public int getInteger() {
         return integerGenerator.gen();
     }
 
+    @Override
     public IntegerGenerator integerGen() {
         return integerGenerator;
     }
 
+    @Override
     public long getLong() {
         return longGenerator.gen();
     }
 
+    @Override
     public LongGenerator longGen() {
         return longGenerator;
     }
 
+    @Override
     public float getFloat() {
         return floatGenerator.gen();
     }
 
+    @Override
     public FloatGenerator floatGen() {
         return floatGenerator;
     }
 
+    @Override
     public double getDouble() {
         return doubleGenerator.gen();
     }
 
+    @Override
     public DoubleGenerator doubleGen() {
         return doubleGenerator;
     }
 
+    @Override
     public <T> T call(Generator<T> generator) {
         RoseTree<List<DrawAtom>> childHistory = history.children().get(childIndex);
         childIndex++;

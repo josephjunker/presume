@@ -1,5 +1,7 @@
 package tech.jnkr.presume;
 
+import tech.jnkr.presume.generators.*;
+
 public interface GenerationSource {
     boolean getBoolean();
 
@@ -9,6 +11,10 @@ public interface GenerationSource {
 
     IntegerGenerator integerGen();
 
+    long getLong();
+
+    LongGenerator longGen();
+
     float getFloat();
 
     FloatGenerator floatGen();
@@ -16,10 +22,6 @@ public interface GenerationSource {
     double getDouble();
 
     DoubleGenerator doubleGen();
-
-    long getLong();
-
-    LongGenerator longGen();
 
     <T> T call(Generator<T> generator);
 }

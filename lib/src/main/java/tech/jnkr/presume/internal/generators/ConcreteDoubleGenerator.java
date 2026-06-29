@@ -1,10 +1,12 @@
-package tech.jnkr.presume;
+package tech.jnkr.presume.internal.generators;
 
 import tech.jnkr.presume.exceptions.InvalidGeneratorException;
+import tech.jnkr.presume.generators.DoubleGenerator;
+import tech.jnkr.presume.internal.atoms.*;
 
 import java.util.function.Supplier;
 
-public class DoubleGenerator implements SimpleGenerator<Double> {
+public class ConcreteDoubleGenerator implements SimpleGenerator<Double>, DoubleGenerator {
     private final double minimum;
     private final double maximum;
     private final double approaching;
@@ -12,7 +14,7 @@ public class DoubleGenerator implements SimpleGenerator<Double> {
     private final boolean allowInfinity;
     private final Supplier<DrawAtom> atomSupplier;
 
-    DoubleGenerator(Supplier<DrawAtom> atomSupplier) {
+    public ConcreteDoubleGenerator(Supplier<DrawAtom> atomSupplier) {
         this.atomSupplier = atomSupplier;
         minimum = -Double.MAX_VALUE / 2f;
         maximum = Double.MAX_VALUE / 2f;
@@ -21,7 +23,7 @@ public class DoubleGenerator implements SimpleGenerator<Double> {
         allowInfinity = true;
     }
 
-    private DoubleGenerator(
+    private ConcreteDoubleGenerator(
             Supplier<DrawAtom> atomSupplier,
             double minimum,
             double maximum,
@@ -36,36 +38,39 @@ public class DoubleGenerator implements SimpleGenerator<Double> {
         this.allowInfinity = allowInfinity;
     }
 
-    public DoubleGenerator withMinimum(double minimum) {
-        return new DoubleGenerator(
+    public ConcreteDoubleGenerator withMinimum(double minimum) {
+        return new ConcreteDoubleGenerator(
                 atomSupplier, minimum, maximum, approaching, allowNaN, allowInfinity);
     }
 
-    public DoubleGenerator withMaximum(double maximum) {
-        return new DoubleGenerator(
+    public ConcreteDoubleGenerator withMaximum(double maximum) {
+        return new ConcreteDoubleGenerator(
                 atomSupplier, minimum, maximum, approaching, allowNaN, allowInfinity);
     }
 
-    public DoubleGenerator shrinkingTowards(double approaching) {
-        return new DoubleGenerator(
+    public ConcreteDoubleGenerator shrinkingTowards(double approaching) {
+        return new ConcreteDoubleGenerator(
                 atomSupplier, minimum, maximum, approaching, allowNaN, allowInfinity);
     }
 
-    public DoubleGenerator allowNaN() {
-        return new DoubleGenerator(atomSupplier, minimum, maximum, approaching, true, allowInfinity);
+    public ConcreteDoubleGenerator allowNaN() {
+        return new ConcreteDoubleGenerator(
+                atomSupplier, minimum, maximum, approaching, true, allowInfinity);
     }
 
-    public DoubleGenerator disallowNaN() {
-        return new DoubleGenerator(
+    public ConcreteDoubleGenerator disallowNaN() {
+        return new ConcreteDoubleGenerator(
                 atomSupplier, minimum, maximum, approaching, false, allowInfinity);
     }
 
-    public DoubleGenerator allowInfinity() {
-        return new DoubleGenerator(atomSupplier, minimum, maximum, approaching, allowNaN, true);
+    public ConcreteDoubleGenerator allowInfinity() {
+        return new ConcreteDoubleGenerator(
+                atomSupplier, minimum, maximum, approaching, allowNaN, true);
     }
 
-    public DoubleGenerator disallowInfinity() {
-        return new DoubleGenerator(atomSupplier, minimum, maximum, approaching, allowNaN, false);
+    public ConcreteDoubleGenerator disallowInfinity() {
+        return new ConcreteDoubleGenerator(
+                atomSupplier, minimum, maximum, approaching, allowNaN, false);
     }
 
     public Double gen() {

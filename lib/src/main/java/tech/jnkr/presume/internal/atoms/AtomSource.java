@@ -1,11 +1,11 @@
-package tech.jnkr.presume;
+package tech.jnkr.presume.internal.atoms;
 
 import java.util.Random;
 
 public class AtomSource {
     private final Random random = new Random();
 
-    DrawAtom getAtom() {
+    public DrawAtom getAtom() {
         float index = random.nextFloat();
         if (index < 0.05f) return new Trivial1();
         if (index < 0.1f) return new Trivial2();

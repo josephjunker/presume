@@ -1,4 +1,4 @@
-package tech.jnkr.presume.utilities;
+package tech.jnkr.presume.internal.utilities;
 
 import java.util.List;
 

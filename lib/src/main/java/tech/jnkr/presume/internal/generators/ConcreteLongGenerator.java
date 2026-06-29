@@ -1,23 +1,25 @@
-package tech.jnkr.presume;
+package tech.jnkr.presume.internal.generators;
 
 import tech.jnkr.presume.exceptions.InvalidGeneratorException;
+import tech.jnkr.presume.generators.LongGenerator;
+import tech.jnkr.presume.internal.atoms.*;
 
 import java.util.function.Supplier;
 
-public class LongGenerator implements SimpleGenerator<Long> {
+public class ConcreteLongGenerator implements SimpleGenerator<Long>, LongGenerator {
     private final long minimum;
     private final long maximum;
     private final long approaching;
     private final Supplier<DrawAtom> atomSupplier;
 
-    LongGenerator(Supplier<DrawAtom> atomSupplier) {
+    public ConcreteLongGenerator(Supplier<DrawAtom> atomSupplier) {
         this.atomSupplier = atomSupplier;
         minimum = (long) Math.floor(Long.MIN_VALUE / 2f);
         maximum = (long) Math.floor(Long.MAX_VALUE / 2f);
         approaching = 0;
     }
 
-    private LongGenerator(
+    private ConcreteLongGenerator(
             Supplier<DrawAtom> atomSupplier, long minimum, long maximum, long approaching) {
         this.atomSupplier = atomSupplier;
         this.minimum = minimum;
@@ -25,18 +27,22 @@ public class LongGenerator implements SimpleGenerator<Long> {
         this.approaching = approaching;
     }
 
-    public LongGenerator withMinimum(long minimum) {
-        return new LongGenerator(atomSupplier, minimum, maximum, approaching);
+    @Override
+    public ConcreteLongGenerator withMinimum(long minimum) {
+        return new ConcreteLongGenerator(atomSupplier, minimum, maximum, approaching);
     }
 
-    public LongGenerator withMaximum(long maximum) {
-        return new LongGenerator(atomSupplier, minimum, maximum, approaching);
+    @Override
+    public ConcreteLongGenerator withMaximum(long maximum) {
+        return new ConcreteLongGenerator(atomSupplier, minimum, maximum, approaching);
     }
 
-    public LongGenerator shrinkingTowards(long target) {
-        return new LongGenerator(atomSupplier, minimum, maximum, target);
+    @Override
+    public ConcreteLongGenerator shrinkingTowards(long target) {
+        return new ConcreteLongGenerator(atomSupplier, minimum, maximum, target);
     }
 
+    @Override
     public Long gen() {
         return produce(atomSupplier.get());
     }
