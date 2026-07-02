@@ -85,9 +85,7 @@ class RecordingSource implements GenerationSource {
     public RoseTree<List<DrawAtom>> getHistory() {
         // TODO: stack safety
         return new RoseTree<>(
-                this.history,
-                this.children.stream()
-                        .map(RecordingSource::getHistory)
-                        .collect(Collectors.toList()));
+                history,
+                children.stream().map(RecordingSource::getHistory).collect(Collectors.toList()));
     }
 }

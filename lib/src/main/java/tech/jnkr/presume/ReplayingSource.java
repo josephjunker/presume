@@ -6,11 +6,14 @@ import tech.jnkr.presume.internal.atoms.DrawAtom;
 import tech.jnkr.presume.internal.generators.*;
 import tech.jnkr.presume.internal.utilities.RoseTree;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class ReplayingSource implements GenerationSource {
 
     private final RoseTree<List<DrawAtom>> history;
+    private final List<ReplayingSource> children;
     private int index;
     private int childIndex;
 
@@ -25,6 +28,7 @@ public class ReplayingSource implements GenerationSource {
 
     ReplayingSource(RoseTree<List<DrawAtom>> history) {
         this.history = history;
+        this.children = new ArrayList<>();
         this.index = 0;
         this.childIndex = 0;
     }
@@ -92,6 +96,15 @@ public class ReplayingSource implements GenerationSource {
         childIndex++;
         if (childHistory == null) throw new SourceDepletedException();
         ReplayingSource childSource = new ReplayingSource(childHistory);
+        children.add(childSource);
         return generator.gen(childSource);
+    }
+
+    RoseTree<List<DrawAtom>> getTruncatedHistory() {
+        return new RoseTree<>(
+                history.value().subList(0, childIndex),
+                children.stream()
+                        .map(ReplayingSource::getTruncatedHistory)
+                        .collect(Collectors.toList()));
     }
 }
