@@ -7,8 +7,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class History {
-    private final List<DrawAtom> draws;
-    private final List<History> children;
+    public final List<DrawAtom> draws;
+    public final List<History> children;
 
     public History(RoseTree<List<DrawAtom>> state) {
         draws = state.value();
