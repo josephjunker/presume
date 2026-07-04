@@ -6,7 +6,11 @@ import java.util.stream.Stream;
 public class ListZipper<T> {
     private final ImmutableList<T> leftSiblings;
     private final ImmutableList<T> rightSiblings;
-    public final T focus;
+    private final T focus;
+
+    public T focus() {
+        return focus;
+    }
 
     public static <T> Maybe<ListZipper<T>> from(ImmutableList<T> list) {
         return switch (list) {
@@ -64,5 +68,9 @@ public class ListZipper<T> {
 
     public Stream<ImmutableList<T>> chainUpdateStream(Function<T, Stream<T>> fn) {
         return fn.apply(focus).map((T focus) -> this.update((T oldFocus) -> focus).toList());
+    }
+
+    public ImmutableList<T> leftSublist() {
+        return leftSiblings.reverse();
     }
 }

@@ -26,6 +26,13 @@ public sealed interface Maybe<T> permits Just, Nothing {
         };
     }
 
+    default T orDefault(T defaultValue) {
+        return switch (this) {
+            case Nothing() -> defaultValue;
+            case Just(T value) -> value;
+        };
+    }
+
     static <T> Stream<T> justStream(Stream<Maybe<T>> stream) {
         return stream.takeWhile(value -> value instanceof Just<T>)
                 .map(
@@ -35,7 +42,3 @@ public sealed interface Maybe<T> permits Just, Nothing {
                         });
     }
 }
-
-record Just<T>(T value) implements Maybe<T> {}
-
-record Nothing<T>() implements Maybe<T> {}

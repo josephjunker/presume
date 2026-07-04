@@ -1,20 +1,27 @@
 package tech.jnkr.presume.internal.utilities;
 
-import org.jspecify.annotations.Nullable;
-
+import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
 public sealed interface ImmutableList<T> permits Cons, Nil {
-    default ImmutableList<T> push(T value) {
-        return new Cons<>(value, this);
+
+    static <T> ImmutableList<T> empty() {
+        return new Nil<>();
     }
 
-    default @Nullable T head() {
-        return switch (this) {
-            case Nil() -> null;
-            case Cons(T head, ImmutableList<T> tail) -> head;
-        };
+    static <T> ImmutableList<T> fromList(List<T> list) {
+        ImmutableList<T> result = new Nil<>();
+
+        for (T item : list) {
+            result = new Cons<>(item, result);
+        }
+
+        return result;
+    }
+
+    default ImmutableList<T> push(T value) {
+        return new Cons<>(value, this);
     }
 
     default ImmutableList<T> pop() {
@@ -137,7 +144,3 @@ public sealed interface ImmutableList<T> permits Cons, Nil {
         }
     }
 }
-
-record Cons<T>(T head, ImmutableList<T> tail) implements ImmutableList<T> {}
-
-record Nil<T>() implements ImmutableList<T> {}

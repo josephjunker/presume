@@ -1,7 +1,6 @@
 package tech.jnkr.presume;
 
 import tech.jnkr.presume.exceptions.SourceDepletedException;
-import tech.jnkr.presume.internal.Counterexample;
 import tech.jnkr.presume.internal.atoms.DrawAtom;
 import tech.jnkr.presume.internal.utilities.RoseTree;
 
@@ -16,7 +15,7 @@ public class PropertyRunner {
             property.accept(value);
         } catch (Exception e) {
             System.out.println("oh no");
-            Counterexample counterexample = new Counterexample(recordingSource.getHistory());
+            // Counterexample counterexample = new Counterexample(recordingSource.getHistory());
             /*
             Counterexample minimal =
                     counterexample.shrink(

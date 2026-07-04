@@ -4,11 +4,11 @@ import tech.jnkr.presume.generators.*;
 import tech.jnkr.presume.internal.atoms.AtomSource;
 import tech.jnkr.presume.internal.atoms.DrawAtom;
 import tech.jnkr.presume.internal.generators.*;
+import tech.jnkr.presume.internal.utilities.ImmutableList;
 import tech.jnkr.presume.internal.utilities.RoseTree;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 class RecordingSource implements GenerationSource {
 
@@ -82,10 +82,10 @@ class RecordingSource implements GenerationSource {
         return atom;
     }
 
-    public RoseTree<List<DrawAtom>> getHistory() {
+    public RoseTree<ImmutableList<DrawAtom>> getHistory() {
         // TODO: stack safety
         return new RoseTree<>(
-                history,
-                children.stream().map(RecordingSource::getHistory).collect(Collectors.toList()));
+                ImmutableList.fromList(history),
+                ImmutableList.fromList(children).map(RecordingSource::getHistory));
     }
 }
