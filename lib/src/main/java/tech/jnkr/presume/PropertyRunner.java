@@ -2,8 +2,10 @@ package tech.jnkr.presume;
 
 import tech.jnkr.presume.exceptions.SourceDepletedException;
 import tech.jnkr.presume.internal.atoms.DrawAtom;
+import tech.jnkr.presume.internal.utilities.MutableRoseTree;
 import tech.jnkr.presume.internal.utilities.RoseTree;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -38,7 +40,8 @@ public class PropertyRunner {
 
     private static <T> void shrink(
             Generator<T> generator, Consumer<T> property, RoseTree<List<DrawAtom>> counterexample) {
-        ReplayingSource replayingSource = new ReplayingSource(counterexample);
+        ReplayingSource replayingSource =
+                new ReplayingSource(counterexample, new MutableRoseTree<>(new ArrayList<>()));
         T value = null;
         try {
             value = replayingSource.call(generator);

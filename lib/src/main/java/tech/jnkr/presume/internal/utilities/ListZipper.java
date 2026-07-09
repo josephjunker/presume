@@ -46,6 +46,10 @@ public class ListZipper<T> {
         return new ListZipper<>(leftSiblings, updater.apply(focus), rightSiblings);
     }
 
+    public ListZipper<T> replace(T newValue) {
+        return new ListZipper<>(leftSiblings, newValue, rightSiblings);
+    }
+
     public ListZipper<T> leftmost() {
         ImmutableList<T> leftReversed = leftSiblings.reverse();
 

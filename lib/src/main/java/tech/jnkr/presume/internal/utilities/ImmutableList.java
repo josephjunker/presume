@@ -1,5 +1,6 @@
 package tech.jnkr.presume.internal.utilities;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -87,7 +88,7 @@ public sealed interface ImmutableList<T> permits Cons, Nil {
     }
 
     default Stream<ListZipper<T>> contextsStream() {
-        return Maybe.justStream(
+        return Maybe.filterJust(
                 Stream.iterate(
                         this.toZipper(),
                         (Maybe<ListZipper<T>> maybeZipper) ->
@@ -139,6 +140,76 @@ public sealed interface ImmutableList<T> permits Cons, Nil {
                     {
                         result = result.concat(fn.apply(head).reverse());
                         current = tail;
+                    }
+            }
+        }
+    }
+
+    default Maybe<T> getAt(int index) {
+        ImmutableList<T> current = this;
+
+        for (int i = 0; i < index; i++) {
+            switch (current) {
+                case Nil():
+                    {
+                        return Maybe.empty();
+                    }
+                case Cons(var head, var tail):
+                    {
+                        current = tail;
+                    }
+            }
+        }
+
+        return switch (current) {
+            case Nil() -> Maybe.empty();
+            case Cons(var head, var tail) -> Maybe.of(head);
+        };
+    }
+
+    default <U> ImmutableList<U> filterMap(Function<T, Maybe<U>> fn) {
+        ImmutableList<U> result = new Nil<>();
+        var current = this;
+
+        while (true) {
+            switch (current) {
+                case Nil():
+                    {
+                        return result.reverse();
+                    }
+                case Cons(T head, ImmutableList<T> tail):
+                    {
+                        switch (fn.apply(head)) {
+                            case Nothing():
+                                {
+                                    break;
+                                }
+                            case Just(U value):
+                                {
+                                    result.push(value);
+                                }
+                        }
+
+                        current = tail;
+                    }
+            }
+        }
+    }
+
+    default ArrayList<T> toArrayList() {
+        ImmutableList<T> reversed = this.reverse();
+        ArrayList<T> result = new ArrayList<>();
+
+        while (true) {
+            switch (reversed) {
+                case Nil():
+                    {
+                        return result;
+                    }
+                case Cons(T head, ImmutableList<T> tail):
+                    {
+                        result.add(head);
+                        reversed = tail;
                     }
             }
         }

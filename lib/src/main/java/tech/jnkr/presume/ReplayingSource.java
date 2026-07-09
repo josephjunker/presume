@@ -4,15 +4,18 @@ import tech.jnkr.presume.exceptions.SourceDepletedException;
 import tech.jnkr.presume.generators.*;
 import tech.jnkr.presume.internal.atoms.DrawAtom;
 import tech.jnkr.presume.internal.generators.*;
+import tech.jnkr.presume.internal.shrinking.Down;
+import tech.jnkr.presume.internal.shrinking.Right;
+import tech.jnkr.presume.internal.shrinking.TraceEntry;
 import tech.jnkr.presume.internal.utilities.*;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class ReplayingSource implements GenerationSource {
 
-    private final RoseTree<List<DrawAtom>> history;
+    private final MutableRoseTree<ArrayList<TraceEntry>> trace;
+
     private final List<ReplayingSource> children;
 
     private Maybe<ListZipper<DrawAtom>> atomCursor;
@@ -27,11 +30,12 @@ public class ReplayingSource implements GenerationSource {
     private final ConcreteDoubleGenerator doubleGenerator =
             new ConcreteDoubleGenerator(this::getAtom);
 
-    ReplayingSource(RoseTree<List<DrawAtom>> history) {
-        this.history = history;
+    ReplayingSource(
+            RoseTree<List<DrawAtom>> history, MutableRoseTree<ArrayList<TraceEntry>> trace) {
         this.children = new ArrayList<>();
         this.atomCursor = ListZipper.from(ImmutableList.fromList(history.value));
         this.childCursor = ListZipper.from(history.children);
+        this.trace = trace;
     }
 
     private DrawAtom getAtom() {
@@ -41,7 +45,9 @@ public class ReplayingSource implements GenerationSource {
             case Just(ListZipper<DrawAtom> zipper):
                 {
                     atomCursor = zipper.right();
-                    yield zipper.focus();
+                    DrawAtom result = zipper.focus();
+                    trace.value.add(new Right(result));
+                    yield result;
                 }
         };
     }
@@ -103,7 +109,12 @@ public class ReplayingSource implements GenerationSource {
                 throw new SourceDepletedException();
             case Just(ListZipper<RoseTree<List<DrawAtom>>> zipper):
                 {
-                    ReplayingSource childSource = new ReplayingSource(zipper.focus());
+                    MutableRoseTree<ArrayList<TraceEntry>> childTrace =
+                            new MutableRoseTree<>(new ArrayList<>());
+                    trace.children.add(childTrace);
+                    trace.value.add(new Down());
+
+                    ReplayingSource childSource = new ReplayingSource(zipper.focus(), childTrace);
                     childCursor = zipper.right();
                     children.add(childSource);
                     return generator.gen(childSource);
@@ -111,13 +122,7 @@ public class ReplayingSource implements GenerationSource {
         }
     }
 
-    RoseTree<ImmutableList<DrawAtom>> getTruncatedHistory() {
-        return new RoseTree<>(
-                atomCursor.map(ListZipper::leftSublist).orDefault(ImmutableList.empty()),
-                // TODO: implement proper collector
-                ImmutableList.fromList(
-                        children.stream()
-                                .map(ReplayingSource::getTruncatedHistory)
-                                .collect(Collectors.toList())));
+    RoseTree<ImmutableList<TraceEntry>> finalTrace() {
+        return trace.map(ImmutableList::fromList).toImmutable();
     }
 }
