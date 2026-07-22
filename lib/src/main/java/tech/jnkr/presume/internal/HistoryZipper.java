@@ -64,12 +64,9 @@ public class HistoryZipper {
                     {
                         switch (historyZipper.composedZipper.value()) {
                             // This occurs if we have descended into a generator which
-                            // never
-                            // requested a DrawAtom, resulting in the zipper for this
-                            // generator
-                            // being empty, or if we have already used up all of the
-                            // atoms
-                            // for the current generator (i.e. moved all the way to the
+                            // never requested a DrawAtom, resulting in the zipper for this
+                            // generator being empty, or if we have already used up all of the
+                            // atoms for the current generator (i.e. moved all the way to the
                             // right)
                             case Nothing():
                                 {
