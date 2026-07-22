@@ -5,31 +5,73 @@ import tech.jnkr.presume.internal.atoms.DrawAtom;
 import tech.jnkr.presume.internal.utilities.*;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
 public class Shrinker {
-    RoseTree<ImmutableList<TraceEntry>> trace;
-    Function<RoseTree<List<DrawAtom>>, Maybe<RoseTree<ImmutableList<TraceEntry>>>> tryReproduce;
-    int targetAtomIndex;
+    Function<RoseTree<ArrayList<DrawAtom>>, Maybe<RoseTree<ImmutableList<TraceEntry>>>>
+            tryReproduce;
 
     public Shrinker(
-            RoseTree<ImmutableList<TraceEntry>> trace,
-            Function<RoseTree<List<DrawAtom>>, Maybe<RoseTree<ImmutableList<TraceEntry>>>>
+            Function<RoseTree<ArrayList<DrawAtom>>, Maybe<RoseTree<ImmutableList<TraceEntry>>>>
                     tryReproduce) {
-        this.trace = trace;
         this.tryReproduce = tryReproduce;
-        this.targetAtomIndex = 0;
     }
 
-    private Maybe<HistoryZipper> focusAtom() {
-        return HistoryZipper.fromTrace(trace).chaseToAtomIndex(targetAtomIndex);
+    public RoseTree<ImmutableList<TraceEntry>> shrink(RoseTree<ImmutableList<TraceEntry>> trace) {
+        var lastTrace = trace;
+        var currentTrace = doShrinkingPass(trace);
+        int i = 0;
+
+        // TODO: implement the relevant equals methods
+        // TODO: add a timer here, shrink for up to 5 seconds instead of using i
+        while (i < 5 && !lastTrace.equals(currentTrace)) {
+            lastTrace = currentTrace;
+            currentTrace = doShrinkingPass(currentTrace);
+            i++;
+        }
+
+        return currentTrace;
     }
 
-    public Stream<RoseTree<ArrayList<DrawAtom>>> getCurrentAtomShrinks() {
-        Maybe<HistoryZipper> maybeZipper = focusAtom();
+    private RoseTree<ImmutableList<TraceEntry>> doShrinkingPass(
+            RoseTree<ImmutableList<TraceEntry>> trace) {
+        int index = 0;
+        var currentTrace = trace;
+
+        while (index < countAtoms(currentTrace)) {
+            var optionalShrunk =
+                    getTargetAtomShrinks(currentTrace, index)
+                            .limit(10)
+                            // We don't need exception handling around SourceDepletedException in
+                            // here, because we assume that tryReproduce will handle it for us.
+                            .map(tryReproduce)
+                            .filter(Maybe::isJust)
+                            .findFirst();
+
+            if (optionalShrunk.isEmpty()) {
+                // We failed to reduce the test case by shrinking the current atom.
+                // Move on to attempt the next atom.
+                index++;
+            } else {
+                // `unwrapUnsafe` is safe because of the `filter` above.
+                currentTrace = optionalShrunk.get().unwrapUnsafe();
+                index++;
+            }
+        }
+
+        return currentTrace;
+    }
+
+    private int countAtoms(RoseTree<ImmutableList<TraceEntry>> trace) {
+        // TODO
+    }
+
+    private Stream<RoseTree<ArrayList<DrawAtom>>> getTargetAtomShrinks(
+            RoseTree<ImmutableList<TraceEntry>> trace, int targetAtomIndex) {
+        Maybe<HistoryZipper> maybeZipper =
+                HistoryZipper.fromTrace(trace).chaseToAtomIndex(targetAtomIndex);
 
         BiFunction<HistoryZipper, DrawAtom, Stream<HistoryZipper>> replaceFocus =
                 (zipper, atom) ->

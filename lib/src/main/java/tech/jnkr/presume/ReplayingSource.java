@@ -10,16 +10,15 @@ import tech.jnkr.presume.internal.shrinking.TraceEntry;
 import tech.jnkr.presume.internal.utilities.*;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public class ReplayingSource implements GenerationSource {
 
     private final MutableRoseTree<ArrayList<TraceEntry>> trace;
 
-    private final List<ReplayingSource> children;
+    private final ArrayList<ReplayingSource> children;
 
     private Maybe<ListZipper<DrawAtom>> atomCursor;
-    private Maybe<ListZipper<RoseTree<List<DrawAtom>>>> childCursor;
+    private Maybe<ListZipper<RoseTree<ArrayList<DrawAtom>>>> childCursor;
 
     private final ConcreteBooleanGenerator booleanGenerator =
             new ConcreteBooleanGenerator(this::getAtom);
@@ -31,7 +30,7 @@ public class ReplayingSource implements GenerationSource {
             new ConcreteDoubleGenerator(this::getAtom);
 
     ReplayingSource(
-            RoseTree<List<DrawAtom>> history, MutableRoseTree<ArrayList<TraceEntry>> trace) {
+            RoseTree<ArrayList<DrawAtom>> history, MutableRoseTree<ArrayList<TraceEntry>> trace) {
         this.children = new ArrayList<>();
         this.atomCursor = ListZipper.from(ImmutableList.fromList(history.value));
         this.childCursor = ListZipper.from(history.children);
@@ -107,7 +106,7 @@ public class ReplayingSource implements GenerationSource {
         switch (childCursor) {
             case Nothing():
                 throw new SourceDepletedException();
-            case Just(ListZipper<RoseTree<List<DrawAtom>>> zipper):
+            case Just(ListZipper<RoseTree<ArrayList<DrawAtom>>> zipper):
                 {
                     MutableRoseTree<ArrayList<TraceEntry>> childTrace =
                             new MutableRoseTree<>(new ArrayList<>());

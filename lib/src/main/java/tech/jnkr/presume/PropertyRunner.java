@@ -1,12 +1,10 @@
 package tech.jnkr.presume;
 
-import tech.jnkr.presume.exceptions.SourceDepletedException;
-import tech.jnkr.presume.internal.atoms.DrawAtom;
+import tech.jnkr.presume.exceptions.NondeterministicGeneratorException;
+import tech.jnkr.presume.internal.utilities.ImmutableList;
 import tech.jnkr.presume.internal.utilities.MutableRoseTree;
-import tech.jnkr.presume.internal.utilities.RoseTree;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.function.Consumer;
 
 public class PropertyRunner {
@@ -16,39 +14,22 @@ public class PropertyRunner {
         try {
             property.accept(value);
         } catch (Exception e) {
-            System.out.println("oh no");
-            // Counterexample counterexample = new Counterexample(recordingSource.getHistory());
-            /*
-            Counterexample minimal =
-                    counterexample.shrink(
-                            (history) -> {
-                                try {
-                                    ReplayingSource replayingSource = new ReplayingSource(history);
-                                    T attempt = replayingSource.call(generator);
-                                    property.accept(attempt);
-                                } catch (SourceDepletedException e2) {
-                                    return false;
-                                } catch (Exception e3) {
-                                    return true;
-                                }
+            ReplayingSource replayingSource =
+                    new ReplayingSource(
+                            recordingSource.getHistory().map(ImmutableList::toArrayList),
+                            new MutableRoseTree<>(new ArrayList<>()));
 
-                                return false;
-                            });
-                            */
+            try {
+                // We have to re-run generation to get the detailed trace
+                replayingSource.call(generator);
+            } catch (Exception e2) {
+                // Running generation twice should give us identical results, so if there's an
+                // exception it's due to a bad user-provided generator.
+                throw new NondeterministicGeneratorException(e2);
+            }
+
+            var trace = replayingSource.finalTrace();
+            // TODO: wire into Shrinker here
         }
-    }
-
-    private static <T> void shrink(
-            Generator<T> generator, Consumer<T> property, RoseTree<List<DrawAtom>> counterexample) {
-        ReplayingSource replayingSource =
-                new ReplayingSource(counterexample, new MutableRoseTree<>(new ArrayList<>()));
-        T value = null;
-        try {
-            value = replayingSource.call(generator);
-        } catch (SourceDepletedException e) {
-
-        }
-
-        property.accept(value);
     }
 }
