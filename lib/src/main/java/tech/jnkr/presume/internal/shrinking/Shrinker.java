@@ -24,8 +24,7 @@ public class Shrinker {
         var currentTrace = doShrinkingPass(trace);
         int i = 0;
 
-        // TODO: implement the relevant equals methods
-        // TODO: add a timer here, shrink for up to 5 seconds instead of using i
+        // TODO: add a timer here, shrink for up to 10 seconds instead of using i
         while (i < 5 && !lastTrace.equals(currentTrace)) {
             lastTrace = currentTrace;
             currentTrace = doShrinkingPass(currentTrace);

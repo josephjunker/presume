@@ -1,5 +1,6 @@
 package tech.jnkr.presume.internal.utilities;
 
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -76,5 +77,19 @@ public class ListZipper<T> {
 
     public ImmutableList<T> leftSublist() {
         return leftSiblings.reverse();
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (this == other) return true;
+        if (!(other instanceof ListZipper<?> otherZipper)) return false;
+        return focus.equals(otherZipper.focus)
+                && leftSiblings.equals(otherZipper.leftSiblings)
+                && rightSiblings.equals(otherZipper.rightSiblings);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(focus, leftSiblings, rightSiblings);
     }
 }

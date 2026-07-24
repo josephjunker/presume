@@ -1,5 +1,6 @@
 package tech.jnkr.presume.internal.utilities;
 
+import java.util.Objects;
 import java.util.function.Function;
 
 public class RoseTreeZipper<T> {
@@ -119,5 +120,24 @@ public class RoseTreeZipper<T> {
         }
 
         return last.focus;
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (this == other) return true;
+        if (!(other instanceof RoseTreeZipper<?> otherZipper)) return false;
+        return parents.equals(otherZipper.parents)
+                && focus.equals(otherZipper.focus)
+                && leftSiblings.equals(otherZipper.leftSiblings)
+                && rightSiblings.equals(otherZipper.rightSiblings);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(
+                parents.hashCode(),
+                focus.hashCode(),
+                leftSiblings.hashCode(),
+                rightSiblings.hashCode());
     }
 }
