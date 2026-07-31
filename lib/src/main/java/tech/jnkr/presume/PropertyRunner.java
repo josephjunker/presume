@@ -3,6 +3,7 @@ package tech.jnkr.presume;
 import tech.jnkr.presume.exceptions.CounterexampleException;
 import tech.jnkr.presume.exceptions.NondeterministicGeneratorException;
 import tech.jnkr.presume.exceptions.SourceDepletedException;
+import tech.jnkr.presume.internal.History;
 import tech.jnkr.presume.internal.shrinking.Shrinker;
 import tech.jnkr.presume.internal.utilities.ImmutableList;
 import tech.jnkr.presume.internal.utilities.Maybe;
@@ -20,7 +21,8 @@ public class PropertyRunner {
         } catch (Exception e) {
             ReplayingSource replayingSource =
                     new ReplayingSource(
-                            recordingSource.getHistory().map(ImmutableList::toArrayList),
+                            new History(
+                                    recordingSource.getHistory().map(ImmutableList::toArrayList)),
                             new MutableRoseTree<>(new ArrayList<>()));
 
             try {

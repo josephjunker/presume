@@ -83,7 +83,8 @@ class RecordingSource implements GenerationSource {
     }
 
     public RoseTree<ImmutableList<DrawAtom>> getHistory() {
-        // TODO: stack safety
+        // TODO: stack safety.
+        // This should also return History instead of a bare data structure
         return new RoseTree<>(
                 ImmutableList.fromList(history),
                 ImmutableList.fromList(children).map(RecordingSource::getHistory));

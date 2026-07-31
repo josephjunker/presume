@@ -14,8 +14,8 @@ public record RoseTreeBreadcrumb<T>(
                 instanceof
                 RoseTreeBreadcrumb<?>(
                         var otherValue,
-                        ImmutableList<RoseTree<?>> otherLeftChildren,
-                        ImmutableList<RoseTree<?>> otherRightChildren))) return false;
+                        ImmutableList<?> otherLeftChildren,
+                        ImmutableList<?> otherRightChildren))) return false;
 
         return value.equals(otherValue)
                 && leftChildren.equals(otherLeftChildren)

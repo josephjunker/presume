@@ -36,6 +36,10 @@ public class RoseTree<T> {
         return acc;
     }
 
+    public RoseTreeZipper<T> toZipper() {
+        return RoseTreeZipper.fromTree(this);
+    }
+
     @Override
     public boolean equals(Object other) {
         if (this == other) return true;

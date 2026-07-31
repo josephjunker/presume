@@ -1,6 +1,8 @@
 package tech.jnkr.presume.internal.shrinking;
 
-import tech.jnkr.presume.internal.HistoryZipper;
+import tech.jnkr.presume.internal.History;
+import tech.jnkr.presume.internal.Trace;
+import tech.jnkr.presume.internal.TraceZipper;
 import tech.jnkr.presume.internal.atoms.*;
 import tech.jnkr.presume.internal.utilities.*;
 
@@ -10,16 +12,13 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 public class Shrinker {
-    Function<RoseTree<ArrayList<DrawAtom>>, Maybe<RoseTree<ImmutableList<TraceEntry>>>>
-            tryReproduce;
+    Function<History, Maybe<Trace>> tryReproduce;
 
-    public Shrinker(
-            Function<RoseTree<ArrayList<DrawAtom>>, Maybe<RoseTree<ImmutableList<TraceEntry>>>>
-                    tryReproduce) {
+    public Shrinker(Function<History, Maybe<Trace>> tryReproduce) {
         this.tryReproduce = tryReproduce;
     }
 
-    public RoseTree<ArrayList<DrawAtom>> shrink(RoseTree<ImmutableList<TraceEntry>> trace) {
+    public RoseTree<ArrayList<DrawAtom>> shrink(Trace trace) {
         var lastTrace = trace;
         var currentTrace = doShrinkingPass(trace);
         int i = 0;
@@ -32,15 +31,14 @@ public class Shrinker {
         }
 
         // TODO: weird to go through a zipper for this, this should be a standalone helper
-        return HistoryZipper.fromTrace(currentTrace).toHistory();
+        return TraceZipper.fromTrace(currentTrace).toHistory();
     }
 
-    private RoseTree<ImmutableList<TraceEntry>> doShrinkingPass(
-            RoseTree<ImmutableList<TraceEntry>> trace) {
+    private Trace doShrinkingPass(Trace trace) {
         int index = 0;
         var currentTrace = trace;
 
-        while (index < countAtoms(currentTrace)) {
+        while (index < currentTrace.atomCount()) {
             var optionalShrunk =
                     getTargetAtomShrinks(currentTrace, index)
                             .limit(10)
@@ -64,35 +62,21 @@ public class Shrinker {
         return currentTrace;
     }
 
-    private int countAtoms(RoseTree<ImmutableList<TraceEntry>> trace) {
-        return trace.foldDepthFirst(
-                (Integer total, ImmutableList<TraceEntry> list) ->
-                        list.foldLeft(
-                                (Integer acc, TraceEntry entry) ->
-                                        switch (entry) {
-                                            case Right(var ignored) -> acc + 1;
-                                            case Down() -> acc;
-                                        },
-                                total),
-                0);
-    }
+    private Stream<History> getTargetAtomShrinks(Trace trace, int targetAtomIndex) {
+        Maybe<TraceZipper> maybeZipper =
+                TraceZipper.fromTrace(trace).chaseToAtomIndex(targetAtomIndex);
 
-    private Stream<RoseTree<ArrayList<DrawAtom>>> getTargetAtomShrinks(
-            RoseTree<ImmutableList<TraceEntry>> trace, int targetAtomIndex) {
-        Maybe<HistoryZipper> maybeZipper =
-                HistoryZipper.fromTrace(trace).chaseToAtomIndex(targetAtomIndex);
-
-        BiFunction<HistoryZipper, DrawAtom, Stream<HistoryZipper>> replaceFocus =
+        BiFunction<TraceZipper, DrawAtom, Stream<TraceZipper>> replaceFocus =
                 (zipper, atom) ->
                         switch (zipper.replace(atom)) {
                             case Nothing() -> Stream.empty();
-                            case Just(HistoryZipper newZipper) -> Stream.of(newZipper);
+                            case Just(TraceZipper newZipper) -> Stream.of(newZipper);
                         };
 
-        Stream<HistoryZipper> shrunkZippers =
+        Stream<TraceZipper> shrunkZippers =
                 switch (maybeZipper) {
                     case Nothing() -> Stream.empty();
-                    case Just(HistoryZipper zipper) ->
+                    case Just(TraceZipper zipper) ->
                             switch (zipper.focus()) {
                                 case Nothing() -> Stream.empty();
                                 case Just(DrawAtom atom) -> {
@@ -104,7 +88,7 @@ public class Shrinker {
                             };
                 };
 
-        return shrunkZippers.map(HistoryZipper::toHistory);
+        return shrunkZippers.map(zipper -> zipper.toTrace().toHistory());
     }
 
     private Stream<DrawAtom> shrinkAtom(DrawAtom atom) {

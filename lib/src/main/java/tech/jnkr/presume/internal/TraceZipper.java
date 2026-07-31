@@ -9,49 +9,49 @@ import tech.jnkr.presume.internal.utilities.*;
 import java.util.ArrayList;
 import java.util.function.Function;
 
-public class HistoryZipper {
+public class TraceZipper {
     private final RoseTreeZipper<Maybe<ListZipper<TraceEntry>>> composedZipper;
     private final int childIndex;
 
-    private HistoryZipper(
+    private TraceZipper(
             RoseTreeZipper<Maybe<ListZipper<TraceEntry>>> composedZipper, int childIndex) {
         this.composedZipper = composedZipper;
         this.childIndex = childIndex;
     }
 
-    public static HistoryZipper fromTrace(RoseTree<ImmutableList<TraceEntry>> trace) {
-        return new HistoryZipper(RoseTreeZipper.fromTree(trace.map(ImmutableList::toZipper)), 0);
+    public static TraceZipper fromTrace(Trace trace) {
+        return new TraceZipper(
+                RoseTreeZipper.fromTree(trace.contents.map(ImmutableList::toZipper)), 0);
     }
 
-    public Maybe<HistoryZipper> right() {
+    public Maybe<TraceZipper> right() {
         var inner = composedZipper.value().chain(ListZipper::right);
 
         return inner.map(
                 listZipper ->
-                        new HistoryZipper(
-                                composedZipper.replace(Maybe.of(listZipper)), childIndex));
+                        new TraceZipper(composedZipper.replace(Maybe.of(listZipper)), childIndex));
     }
 
-    public Maybe<HistoryZipper> down() {
+    public Maybe<TraceZipper> down() {
         var maybeZipper = composedZipper.nthChild(childIndex);
 
-        return maybeZipper.map(roseZipper -> new HistoryZipper(roseZipper, childIndex));
+        return maybeZipper.map(roseZipper -> new TraceZipper(roseZipper, childIndex));
     }
 
     // Note that this moves us both up AND right!
     // This is because we don't want to re-enter a subtree after we've already used it during
     // shrinking
-    public Maybe<HistoryZipper> exitSubtree() {
+    public Maybe<TraceZipper> exitSubtree() {
         var maybeZipper = composedZipper.up();
 
-        return maybeZipper.map(roseZipper -> new HistoryZipper(roseZipper, childIndex + 1));
+        return maybeZipper.map(roseZipper -> new TraceZipper(roseZipper, childIndex + 1));
     }
 
     /*
     Invariant: the result of this, if it is a Just, always has its focus pointing to
     a Right(DrawAtom), not to a Down()
     */
-    public Maybe<HistoryZipper> chaseToAtomIndex(int index) {
+    public Maybe<TraceZipper> chaseToAtomIndex(int index) {
         var result = Maybe.of(this);
         int i = 0;
 
@@ -81,7 +81,7 @@ public class HistoryZipper {
                                         // i, because `index` is the count of actual *atoms* that
                                         // we've passed, not the count of TraceEntries.
                                         case Down() -> result = historyZipper.down();
-                                        case Right(DrawAtom atom) -> {
+                                        case Right(DrawAtom ignored) -> {
                                             i = i + 1;
                                             result = historyZipper.right();
                                         }
@@ -93,6 +93,17 @@ public class HistoryZipper {
         }
 
         return result;
+    }
+
+    public Trace toTrace() {
+        return new Trace(
+                composedZipper
+                        .toTree()
+                        .map(
+                                maybeZipper ->
+                                        maybeZipper
+                                                .map(ListZipper::toList)
+                                                .orDefault(ImmutableList.empty())));
     }
 
     public RoseTree<ArrayList<DrawAtom>> toHistory() {
@@ -109,7 +120,7 @@ public class HistoryZipper {
                                     entries.filterMap(
                                             entry ->
                                                     switch (entry) {
-                                                        case Down() -> new Nothing<DrawAtom>();
+                                                        case Down() -> new Nothing<>();
                                                         case Right(DrawAtom atom) -> Maybe.of(atom);
                                                     });
 
@@ -119,7 +130,7 @@ public class HistoryZipper {
 
     public Maybe<DrawAtom> focus() {
         // We want to make sure we're pointing at a Right(), if any Rights remain in the tree.
-        Maybe<HistoryZipper> normalized = chaseToAtomIndex(0);
+        Maybe<TraceZipper> normalized = chaseToAtomIndex(0);
 
         return normalized.chain(
                 historyZipper ->
@@ -135,9 +146,9 @@ public class HistoryZipper {
                                         }));
     }
 
-    public Maybe<HistoryZipper> replace(DrawAtom atom) {
+    public Maybe<TraceZipper> replace(DrawAtom atom) {
         // normalized will point to a Right, if it exists
-        Maybe<HistoryZipper> normalized = chaseToAtomIndex(0);
+        Maybe<TraceZipper> normalized = chaseToAtomIndex(0);
 
         // This will always be a Just, because of chaseToAtomIndex's invariant
         Function<Maybe<ListZipper<TraceEntry>>, Maybe<ListZipper<TraceEntry>>> updateInnerZipper =
@@ -146,7 +157,7 @@ public class HistoryZipper {
 
         return normalized.map(
                 historyZipper ->
-                        new HistoryZipper(
+                        new TraceZipper(
                                 historyZipper.composedZipper.update(updateInnerZipper),
                                 childIndex));
     }

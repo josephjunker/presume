@@ -2,6 +2,8 @@ package tech.jnkr.presume;
 
 import tech.jnkr.presume.exceptions.SourceDepletedException;
 import tech.jnkr.presume.generators.*;
+import tech.jnkr.presume.internal.History;
+import tech.jnkr.presume.internal.Trace;
 import tech.jnkr.presume.internal.atoms.DrawAtom;
 import tech.jnkr.presume.internal.generators.*;
 import tech.jnkr.presume.internal.shrinking.Down;
@@ -29,11 +31,10 @@ public class ReplayingSource implements GenerationSource {
     private final ConcreteDoubleGenerator doubleGenerator =
             new ConcreteDoubleGenerator(this::getAtom);
 
-    ReplayingSource(
-            RoseTree<ArrayList<DrawAtom>> history, MutableRoseTree<ArrayList<TraceEntry>> trace) {
+    ReplayingSource(History history, MutableRoseTree<ArrayList<TraceEntry>> trace) {
         this.children = new ArrayList<>();
-        this.atomCursor = ListZipper.from(ImmutableList.fromList(history.value));
-        this.childCursor = ListZipper.from(history.children);
+        this.atomCursor = ListZipper.from(ImmutableList.fromList(history.contents.value));
+        this.childCursor = ListZipper.from(history.contents.children);
         this.trace = trace;
     }
 
@@ -120,15 +121,17 @@ public class ReplayingSource implements GenerationSource {
                     trace.children.add(childTrace);
                     trace.value.add(new Down());
 
-                    ReplayingSource childSource = new ReplayingSource(zipper.focus(), childTrace);
+                    ReplayingSource childSource =
+                            new ReplayingSource(new History(zipper.focus()), childTrace);
                     childCursor = zipper.right();
                     children.add(childSource);
+
                     return generator.gen(childSource);
                 }
         }
     }
 
-    RoseTree<ImmutableList<TraceEntry>> finalTrace() {
-        return trace.map(ImmutableList::fromList).toImmutable();
+    Trace finalTrace() {
+        return new Trace(trace.map(ImmutableList::fromList).toImmutable());
     }
 }
