@@ -6,7 +6,6 @@ import tech.jnkr.presume.internal.TraceZipper;
 import tech.jnkr.presume.internal.atoms.*;
 import tech.jnkr.presume.internal.utilities.*;
 
-import java.util.ArrayList;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -18,7 +17,7 @@ public class Shrinker {
         this.tryReproduce = tryReproduce;
     }
 
-    public RoseTree<ArrayList<DrawAtom>> shrink(Trace trace) {
+    public History shrink(Trace trace) {
         var lastTrace = trace;
         var currentTrace = doShrinkingPass(trace);
         int i = 0;
@@ -30,8 +29,7 @@ public class Shrinker {
             i++;
         }
 
-        // TODO: weird to go through a zipper for this, this should be a standalone helper
-        return TraceZipper.fromTrace(currentTrace).toHistory();
+        return currentTrace.toHistory();
     }
 
     private Trace doShrinkingPass(Trace trace) {
