@@ -1,7 +1,7 @@
 package tech.jnkr.presume.internal.shrinking;
 
 import tech.jnkr.presume.internal.HistoryZipper;
-import tech.jnkr.presume.internal.atoms.DrawAtom;
+import tech.jnkr.presume.internal.atoms.*;
 import tech.jnkr.presume.internal.utilities.*;
 
 import java.util.ArrayList;
@@ -19,7 +19,7 @@ public class Shrinker {
         this.tryReproduce = tryReproduce;
     }
 
-    public RoseTree<ImmutableList<TraceEntry>> shrink(RoseTree<ImmutableList<TraceEntry>> trace) {
+    public RoseTree<ArrayList<DrawAtom>> shrink(RoseTree<ImmutableList<TraceEntry>> trace) {
         var lastTrace = trace;
         var currentTrace = doShrinkingPass(trace);
         int i = 0;
@@ -31,7 +31,8 @@ public class Shrinker {
             i++;
         }
 
-        return currentTrace;
+        // TODO: weird to go through a zipper for this, this should be a standalone helper
+        return HistoryZipper.fromTrace(currentTrace).toHistory();
     }
 
     private RoseTree<ImmutableList<TraceEntry>> doShrinkingPass(
@@ -44,7 +45,7 @@ public class Shrinker {
                     getTargetAtomShrinks(currentTrace, index)
                             .limit(10)
                             // We don't need exception handling around SourceDepletedException in
-                            // here, because we assume that tryReproduce will handle it for us.
+                            // here, because tryReproduce will handle it for us.
                             .map(tryReproduce)
                             .filter(Maybe::isJust)
                             .findFirst();
@@ -64,7 +65,16 @@ public class Shrinker {
     }
 
     private int countAtoms(RoseTree<ImmutableList<TraceEntry>> trace) {
-        // TODO
+        return trace.foldDepthFirst(
+                (Integer total, ImmutableList<TraceEntry> list) ->
+                        list.foldLeft(
+                                (Integer acc, TraceEntry entry) ->
+                                        switch (entry) {
+                                            case Right(var ignored) -> acc + 1;
+                                            case Down() -> acc;
+                                        },
+                                total),
+                0);
     }
 
     private Stream<RoseTree<ArrayList<DrawAtom>>> getTargetAtomShrinks(
@@ -86,7 +96,7 @@ public class Shrinker {
                             switch (zipper.focus()) {
                                 case Nothing() -> Stream.empty();
                                 case Just(DrawAtom atom) -> {
-                                    Stream<DrawAtom> shrinks = atom.shrink();
+                                    Stream<DrawAtom> shrinks = shrinkAtom(atom);
 
                                     yield shrinks.flatMap(
                                             smallerAtom -> replaceFocus.apply(zipper, smallerAtom));
@@ -95,5 +105,43 @@ public class Shrinker {
                 };
 
         return shrunkZippers.map(HistoryZipper::toHistory);
+    }
+
+    private Stream<DrawAtom> shrinkAtom(DrawAtom atom) {
+        return switch (atom) {
+            case Trivial1() -> Stream.of();
+            case Trivial2() -> Stream.of(new Trivial1());
+            case Regular(float ratio, boolean sign, boolean simplify) -> {
+                Stream<DrawAtom> trivials = Stream.of(new Trivial1(), new Trivial2());
+                Stream<DrawAtom> flags = simplifyFlags(ratio, sign, simplify);
+                Stream<Regular> reduced =
+                        Stream.iterate(
+                                new Regular(ratio / 2f, sign, simplify),
+                                r -> new Regular(r.ratio() / 2f, r.sign(), r.simplify()));
+
+                yield Stream.concat(
+                        Stream.concat(trivials, flags),
+                        reduced.flatMap(
+                                r ->
+                                        Stream.concat(
+                                                Stream.of(r),
+                                                simplifyFlags(r.ratio(), r.sign(), r.simplify()))));
+            }
+            case Edge(float ratio, boolean sign) ->
+                    Stream.of(new Trivial1(), new Trivial2(), new Regular(ratio, sign, false));
+        };
+    }
+
+    private Stream<DrawAtom> simplifyFlags(float ratio, boolean sign, boolean simplify) {
+        if (sign && simplify) return Stream.of();
+        if (!sign && !simplify)
+            return Stream.of(
+                    new Regular(ratio, true, true),
+                    new Regular(ratio, true, false),
+                    new Regular(ratio, false, true));
+        if (!sign)
+            return Stream.of(new Regular(ratio, true, true), new Regular(ratio, true, false));
+
+        return Stream.of(new Regular(ratio, true, true), new Regular(ratio, false, true));
     }
 }

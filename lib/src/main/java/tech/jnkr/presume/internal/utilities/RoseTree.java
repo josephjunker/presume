@@ -1,6 +1,8 @@
 package tech.jnkr.presume.internal.utilities;
 
+import java.util.ArrayList;
 import java.util.Objects;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 public class RoseTree<T> {
@@ -15,6 +17,23 @@ public class RoseTree<T> {
     public <U> RoseTree<U> map(Function<T, U> fn) {
         // TODO: stack safety
         return new RoseTree<>(fn.apply(value), children.map(tree -> tree.map(fn)));
+    }
+
+    public <U> U foldDepthFirst(BiFunction<U, T, U> fn, U initial) {
+        U acc = initial;
+        ArrayList<RoseTree<T>> queue = new ArrayList<>();
+        queue.add(this);
+        int head = 0;
+
+        while (head < queue.size()) {
+            RoseTree<T> current = queue.get(head);
+            head++;
+            acc = fn.apply(acc, current.value);
+
+            current.children.forEach(queue::add);
+        }
+
+        return acc;
     }
 
     @Override

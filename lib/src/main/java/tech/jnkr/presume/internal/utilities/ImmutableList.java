@@ -2,6 +2,8 @@ package tech.jnkr.presume.internal.utilities;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.BiFunction;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -210,6 +212,37 @@ public sealed interface ImmutableList<T> permits Cons, Nil {
                     {
                         result.add(head);
                         reversed = tail;
+                    }
+            }
+        }
+    }
+
+    default void forEach(Consumer<T> fn) {
+        ImmutableList<T> current = this;
+        while (true) {
+            switch (current) {
+                case Nil():
+                    return;
+                case Cons(T head, ImmutableList<T> tail):
+                    {
+                        fn.accept(head);
+                        current = tail;
+                    }
+            }
+        }
+    }
+
+    default <U> U foldLeft(BiFunction<U, T, U> fn, U initial) {
+        U acc = initial;
+        ImmutableList<T> current = this;
+        while (true) {
+            switch (current) {
+                case Nil():
+                    return acc;
+                case Cons(T head, ImmutableList<T> tail):
+                    {
+                        acc = fn.apply(acc, head);
+                        current = tail;
                     }
             }
         }
