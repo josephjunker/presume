@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.stream.Stream;
 
 public sealed interface ImmutableList<T> permits Cons, Nil {
 
@@ -70,47 +69,6 @@ public sealed interface ImmutableList<T> permits Cons, Nil {
 
     default Maybe<ListZipper<T>> toZipper() {
         return ListZipper.from(this);
-    }
-
-    default ImmutableList<ListZipper<T>> contexts() {
-        ImmutableList<ListZipper<T>> results = new Nil<>();
-        Maybe<ListZipper<T>> current = this.toZipper();
-
-        while (true) {
-            switch (current) {
-                case Nothing():
-                    return results.reverse();
-                case Just(ListZipper<T> zipper):
-                    {
-                        results.push(zipper);
-                        current = zipper.right();
-                    }
-            }
-        }
-    }
-
-    default Stream<ListZipper<T>> contextsStream() {
-        return Maybe.filterJust(
-                Stream.iterate(
-                        this.toZipper(),
-                        (Maybe<ListZipper<T>> maybeZipper) ->
-                                maybeZipper.chain(ListZipper::right)));
-    }
-
-    default ImmutableList<ImmutableList<T>> fillContexts(Function<T, T> fn) {
-        return contexts().map((zipper) -> zipper.update(fn).toList());
-    }
-
-    default Stream<ImmutableList<T>> fillContextsStream(Function<T, T> fn) {
-        return contextsStream().map((zipper) -> zipper.update(fn).toList());
-    }
-
-    default ImmutableList<ImmutableList<T>> fillContextsChain(Function<T, ImmutableList<T>> fn) {
-        return contexts().chain((zipper) -> zipper.chainUpdate(fn));
-    }
-
-    default Stream<ImmutableList<T>> fillContextsChainStream(Function<T, Stream<T>> fn) {
-        return contextsStream().flatMap((zipper) -> zipper.chainUpdateStream(fn));
     }
 
     default <U> ImmutableList<U> map(Function<T, U> fn) {

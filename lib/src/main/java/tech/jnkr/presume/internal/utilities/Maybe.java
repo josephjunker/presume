@@ -1,7 +1,6 @@
 package tech.jnkr.presume.internal.utilities;
 
 import java.util.function.Function;
-import java.util.stream.Stream;
 
 public sealed interface Maybe<T> permits Just, Nothing {
     static <T> Maybe<T> of(T value) {
@@ -52,43 +51,5 @@ public sealed interface Maybe<T> permits Just, Nothing {
                     yield value;
                 }
         };
-    }
-
-    static <T> Stream<T> filterJust(Stream<Maybe<T>> stream) {
-        return stream.takeWhile(value -> value instanceof Just<T>)
-                .map(
-                        maybe -> {
-                            Just<T> just = (Just<T>) maybe;
-                            return (T) just.value();
-                        });
-    }
-
-    static <T> ImmutableList<T> filterJust(ImmutableList<Maybe<T>> list) {
-        ImmutableList<T> result = ImmutableList.empty();
-        ImmutableList<Maybe<T>> cursor = list;
-
-        while (true) {
-            switch (cursor) {
-                case Nil():
-                    {
-                        return result.reverse();
-                    }
-                case Cons(Maybe<T> head, ImmutableList<Maybe<T>> tail):
-                    {
-                        switch (head) {
-                            case Nothing():
-                                {
-                                    break;
-                                }
-                            case Just(T value):
-                                {
-                                    result.push(value);
-                                }
-                        }
-
-                        cursor = tail;
-                    }
-            }
-        }
     }
 }
