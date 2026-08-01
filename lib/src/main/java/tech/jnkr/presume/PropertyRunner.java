@@ -12,8 +12,28 @@ import tech.jnkr.presume.internal.utilities.MutableRoseTree;
 import java.util.ArrayList;
 import java.util.function.Consumer;
 
-public class PropertyRunner {
+public class PropertyRunner<T> {
+
+    AbstractGenerator<T> generator;
+    Consumer<T> property;
+
     public static <T> void runProperty(AbstractGenerator<T> generator, Consumer<T> property) {
+        runProperty(generator, property, 100);
+    }
+
+    public static <T> void runProperty(
+            AbstractGenerator<T> generator, Consumer<T> property, int runCount) {
+        PropertyRunner<T> runner = new PropertyRunner<>(generator, property);
+
+        for (int i = 0; i < runCount; i++) runner.runOnce();
+    }
+
+    private PropertyRunner(AbstractGenerator<T> generator, Consumer<T> property) {
+        this.generator = generator;
+        this.property = property;
+    }
+
+    private void runOnce() {
         RecordingSource recordingSource = new RecordingSource();
         T value = recordingSource.call(generator);
         try {
@@ -22,8 +42,7 @@ public class PropertyRunner {
             ReplayingSource replayingSource =
                     new ReplayingSource(
                             new History(
-                                    recordingSource.getHistory().map(ImmutableList::toArrayList)),
-                            new MutableRoseTree<>(new ArrayList<>()));
+                                    recordingSource.getHistory().map(ImmutableList::toArrayList)));
 
             try {
                 // We have to re-run generation to get the detailed trace

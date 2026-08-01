@@ -1,6 +1,5 @@
-package tech.jnkr.harness;
+package tech.jnkr.presume;
 
-import tech.jnkr.presume.AbstractGenerator;
 import tech.jnkr.presume.generators.GenerationSource;
 
 public class ExampleGenerator extends AbstractGenerator<Boolean> {
