@@ -7,8 +7,7 @@ public class ExampleRunner {
         runProperty(
                 new ExampleGenerator(),
                 (bool) -> {
-                    if (bool != true)
-                        throw new RuntimeException("Expected all booleans to be true");
+                    if (!bool) throw new RuntimeException("Expected all booleans to be true");
                 });
     }
 }

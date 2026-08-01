@@ -13,11 +13,9 @@ import tech.jnkr.presume.internal.utilities.*;
 
 import java.util.ArrayList;
 
-public class ReplayingSource implements GenerationSource {
+class ReplayingSource implements GenerationSource {
 
     private final MutableRoseTree<ArrayList<TraceEntry>> trace;
-
-    private final ArrayList<ReplayingSource> children;
 
     private Maybe<ListZipper<DrawAtom>> atomCursor;
     private Maybe<ListZipper<RoseTree<ArrayList<DrawAtom>>>> childCursor;
@@ -31,15 +29,13 @@ public class ReplayingSource implements GenerationSource {
     private final ConcreteDoubleGenerator doubleGenerator =
             new ConcreteDoubleGenerator(this::getAtom);
 
-    ReplayingSource(History history, MutableRoseTree<ArrayList<TraceEntry>> trace) {
-        this.children = new ArrayList<>();
+    public ReplayingSource(History history, MutableRoseTree<ArrayList<TraceEntry>> trace) {
         this.atomCursor = ListZipper.from(ImmutableList.fromList(history.contents.value));
         this.childCursor = ListZipper.from(history.contents.children);
         this.trace = trace;
     }
 
-    ReplayingSource(History history) {
-        this.children = new ArrayList<>();
+    public ReplayingSource(History history) {
         this.atomCursor = ListZipper.from(ImmutableList.fromList(history.contents.value));
         this.childCursor = ListZipper.from(history.contents.children);
         this.trace = new MutableRoseTree<>(new ArrayList<>());
@@ -110,7 +106,7 @@ public class ReplayingSource implements GenerationSource {
     }
 
     @Override
-    public <T> T call(Generator<T> generator) {
+    public <T> T call(AbstractGenerator<T> generator) {
         switch (childCursor) {
             case Nothing():
                 throw new SourceDepletedException();
@@ -118,20 +114,18 @@ public class ReplayingSource implements GenerationSource {
                 {
                     MutableRoseTree<ArrayList<TraceEntry>> childTrace =
                             new MutableRoseTree<>(new ArrayList<>());
-                    trace.children.add(childTrace);
                     trace.value.add(new Down());
 
                     ReplayingSource childSource =
                             new ReplayingSource(new History(zipper.focus()), childTrace);
                     childCursor = zipper.right();
-                    children.add(childSource);
 
-                    return generator.gen(childSource);
+                    return generator.internalGen(childSource);
                 }
         }
     }
 
-    Trace finalTrace() {
+    public Trace finalTrace() {
         return new Trace(trace.map(ImmutableList::fromList).toImmutable());
     }
 }

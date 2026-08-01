@@ -1,6 +1,6 @@
-package tech.jnkr.presume;
+package tech.jnkr.presume.generators;
 
-import tech.jnkr.presume.generators.*;
+import tech.jnkr.presume.AbstractGenerator;
 
 public interface GenerationSource {
     boolean getBoolean();
@@ -23,5 +23,5 @@ public interface GenerationSource {
 
     DoubleGenerator doubleGen();
 
-    <T> T call(Generator<T> generator);
+    <T> T call(AbstractGenerator<T> generator);
 }

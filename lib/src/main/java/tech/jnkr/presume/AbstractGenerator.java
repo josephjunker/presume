@@ -1,6 +1,8 @@
 package tech.jnkr.presume;
 
-public abstract class Generator<T> {
+import tech.jnkr.presume.generators.GenerationSource;
+
+public abstract class AbstractGenerator<T> {
     protected abstract T gen(GenerationSource source);
 
     T internalGen(GenerationSource source) {

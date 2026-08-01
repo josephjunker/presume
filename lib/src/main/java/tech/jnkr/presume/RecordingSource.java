@@ -70,7 +70,7 @@ class RecordingSource implements GenerationSource {
         return doubleGenerator;
     }
 
-    public <T> T call(Generator<T> generator) {
+    public <T> T call(AbstractGenerator<T> generator) {
         RecordingSource childSource = new RecordingSource();
         children.add(childSource);
         return generator.gen(childSource);
@@ -82,7 +82,7 @@ class RecordingSource implements GenerationSource {
         return atom;
     }
 
-    public RoseTree<ImmutableList<DrawAtom>> getHistory() {
+    RoseTree<ImmutableList<DrawAtom>> getHistory() {
         // TODO: stack safety.
         // This should also return History instead of a bare data structure
         return new RoseTree<>(

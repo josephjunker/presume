@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
 
-class GeneratorTest {
+class InternalGeneratorTest {
     @Test
     void scaffoldSoIDoNotForgetHowJavaTestsWork() {
         assertTrue(true, "true should be 'true'");
