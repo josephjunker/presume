@@ -1,7 +1,9 @@
 package tech.jnkr.presume.internal.utilities;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Objects;
+import java.util.Queue;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -42,6 +44,7 @@ public class RoseTree<T> {
 
     @Override
     public boolean equals(Object other) {
+        // TODO replace this with safeEquals below once I can test it
         if (this == other) return true;
 
         if (!(other instanceof RoseTree<?> otherTree)) return false;
@@ -53,6 +56,49 @@ public class RoseTree<T> {
 
     @Override
     public int hashCode() {
+        // TODO replace this with safeHashCode below once I can test it
         return Objects.hash(value, children.hashCode());
+    }
+
+    public boolean safeEquals(Object other) {
+        if (this == other) return true;
+        if (!(other instanceof RoseTree<?> otherTree)) return false;
+
+        Queue<Tuple<Object, Object>> queue = new ArrayDeque<>();
+        queue.add(new Tuple<>(this, otherTree));
+
+        while (!queue.isEmpty()) {
+            var pair = queue.remove();
+            Object first = pair.first();
+            Object second = pair.second();
+
+            if (first == second) continue;
+
+            if (!(first instanceof RoseTree<?> firstTree)
+                    || !(second instanceof RoseTree<?> secondTree)) return false;
+
+            if (!firstTree.value.equals(secondTree.value)) return false;
+
+            ImmutableList<? extends Object> firstChildren = firstTree.children;
+            ImmutableList<? extends Object> secondChildren = secondTree.children;
+
+            while (firstChildren instanceof Cons<? extends Object> firstCons) {
+                if (secondChildren instanceof Cons<? extends Object> secondCons) {
+                    queue.add(new Tuple<>(firstCons.head(), secondCons.head()));
+                    firstChildren = firstCons.tail();
+                    secondChildren = secondCons.tail();
+                } else {
+                    return false;
+                }
+            }
+
+            if (secondChildren instanceof Cons<?>) return false;
+        }
+
+        return true;
+    }
+
+    public int safeHashCode() {
+        return foldDepthFirst(Objects::hash, 1);
     }
 }

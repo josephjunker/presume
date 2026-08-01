@@ -57,9 +57,11 @@ public class PropertyRunner {
             var counterexampleHistory = shrinker.shrink(replayingSource.finalTrace());
 
             try {
-                T counterexample = new ReplayingSource(counterexampleHistory).call(generator);
-                // TODO collect shrink count and stringify seed
-                throw new CounterexampleException(0, "", counterexample);
+                T counterexample =
+                        new ReplayingSource(counterexampleHistory.first()).call(generator);
+                // TODO collect stringified seed
+                throw new CounterexampleException(
+                        counterexampleHistory.second(), "", counterexample);
             } catch (Exception e3) {
                 throw new NondeterministicGeneratorException(e3);
             }

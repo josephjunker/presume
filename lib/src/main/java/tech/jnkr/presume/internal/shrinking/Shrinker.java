@@ -17,24 +17,30 @@ public class Shrinker {
         this.tryReproduce = tryReproduce;
     }
 
-    public History shrink(Trace trace) {
-        var lastTrace = trace;
-        var currentTrace = doShrinkingPass(trace);
+    public Tuple<History, Integer> shrink(Trace trace) {
+        ShrinkResults lastShrinkResults = new ShrinkResults(trace, 0);
+        ShrinkResults currentShrinkResults = doShrinkingPass(lastShrinkResults.trace);
         int i = 0;
 
-        // TODO: add a timer here, shrink for up to 10 seconds instead of using i
-        while (i < 5 && !lastTrace.equals(currentTrace)) {
-            lastTrace = currentTrace;
-            currentTrace = doShrinkingPass(currentTrace);
+        // TODO: add a timer here, shrink for up to 10 additional seconds instead of using i
+        while (i < 5 && !lastShrinkResults.trace.equals(currentShrinkResults.trace)) {
+            lastShrinkResults =
+                    new ShrinkResults(
+                            currentShrinkResults.trace,
+                            currentShrinkResults.timesShrunk + lastShrinkResults.timesShrunk);
+            currentShrinkResults = doShrinkingPass(currentShrinkResults.trace);
             i++;
         }
 
-        return currentTrace.toHistory();
+        return new Tuple<>(
+                currentShrinkResults.trace.toHistory(),
+                lastShrinkResults.timesShrunk + currentShrinkResults.timesShrunk);
     }
 
-    private Trace doShrinkingPass(Trace trace) {
+    private ShrinkResults doShrinkingPass(Trace trace) {
         int index = 0;
         var currentTrace = trace;
+        int timesShrunk = 0;
 
         while (index < currentTrace.atomCount()) {
             var optionalShrunk =
@@ -54,11 +60,14 @@ public class Shrinker {
                 // `unwrapUnsafe` is safe because of the `filter` above.
                 currentTrace = optionalShrunk.get().unwrapUnsafe();
                 index++;
+                timesShrunk++;
             }
         }
 
-        return currentTrace;
+        return new ShrinkResults(currentTrace, timesShrunk);
     }
+
+    private record ShrinkResults(Trace trace, Integer timesShrunk) {}
 
     private Stream<History> getTargetAtomShrinks(Trace trace, int targetAtomIndex) {
         Maybe<TraceZipper> maybeZipper =
