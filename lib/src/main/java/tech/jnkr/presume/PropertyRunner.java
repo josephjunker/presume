@@ -41,7 +41,7 @@ public class PropertyRunner<T> {
         T value = recordingSource.call(generator);
         try {
             property.accept(value);
-        } catch (Exception e) {
+        } catch (Throwable e) {
 
             // The property has failed! Now we need to collect things so we can shrink.
             // We're on the "slow path" now, so we'll rerun with the recordingSource that will
@@ -53,7 +53,7 @@ public class PropertyRunner<T> {
             try {
                 // We have to re-run generation to get the detailed trace
                 replayedValue = replayingSource.call(generator);
-            } catch (Exception e2) {
+            } catch (Throwable e2) {
                 // Running generation twice should give us identical results, so if there's an
                 // exception while generating the data the second time it's due to a bad
                 // user-provided generator.
@@ -67,7 +67,7 @@ public class PropertyRunner<T> {
             // produces.
             try {
                 property.accept(replayedValue);
-            } catch (Exception e3) {
+            } catch (Throwable e3) {
                 // Now we have a failure, exception, and trace that we know all go together.
                 Failure<T> failure = new Failure<>(replayedValue, replayingSource.finalTrace(), e3);
 
@@ -80,7 +80,14 @@ public class PropertyRunner<T> {
                         shrinkResults.timesShrunk(),
                         "", // TODO: serialize counterexample
                         shrinkResults.failure().counterexample(),
-                        shrinkResults.failure().exception());
+
+                        // It would be nice if we could pass in the actual exception, instead of
+                        // stringifying it, but that wouldn't work. JUnit assertions throw Errors,
+                        // not Exceptions, and apparently putting an Error as the cause of an
+                        // Exception makes Java (Or maybe just JUnit?) report the Error instead of
+                        // the Exception. So we have to shoehorn things here if we want standard
+                        // test assertions to not ruin things.
+                        shrinkResults.failure().exception().toString());
             }
 
             // Uh-oh, replaying the value didn't cause an exception the second time! Something is
@@ -105,7 +112,7 @@ public class PropertyRunner<T> {
 
                     try {
                         property.accept(shrunk);
-                    } catch (Exception exn) {
+                    } catch (Throwable exn) {
                         // The property threw; we successfully shrunk
                         return Maybe.of(new Failure<>(shrunk, source.finalTrace(), exn));
                     }

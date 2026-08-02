@@ -1,7 +1,7 @@
 package tech.jnkr.presume.exceptions;
 
 public class NondeterminismException extends RuntimeException {
-    public NondeterminismException(Object firstRun, Exception firstException, Object secondRun) {
+    public NondeterminismException(Object firstRun, Throwable firstException, Object secondRun) {
         super(
                 "Nondeterminism detected! A property failed once and succeeded once for the"
                         + " same test seed. Ensure that the same value was produced by the"

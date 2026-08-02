@@ -2,7 +2,7 @@ package tech.jnkr.presume.exceptions;
 
 public class CounterexampleException extends RuntimeException {
     public CounterexampleException(
-            int shrinkCount, String seed, Object counterexample, Exception inner) {
+            int shrinkCount, String seed, Object counterexample, String inner) {
         super(
                 String.format(
                         """
@@ -12,8 +12,10 @@ public class CounterexampleException extends RuntimeException {
 
                         Minimal counterexample:
                         %s\
+
+                        Inner exception:
+                        %s
                         """,
-                        shrinkCount, seed, counterexample),
-                inner);
+                        shrinkCount, seed, counterexample, inner));
     }
 }
