@@ -57,8 +57,8 @@ public class ListZipper<T> {
         return switch (leftReversed) {
             case Nil() -> this;
             case Cons(T head, ImmutableList<T> tail) ->
-                    new ListZipper<>(
-                            new Nil<>(), head, rightSiblings.push(focus).concat(leftReversed));
+                    // This may have been the bug
+                    new ListZipper<>(new Nil<>(), head, tail.push(focus).concat(rightSiblings));
         };
     }
 

@@ -11,7 +11,7 @@ public class CounterexampleException extends RuntimeException {
                         Seed: %s
 
                         Minimal counterexample:
-                        %s\
+                        %s
 
                         Inner exception:
                         %s

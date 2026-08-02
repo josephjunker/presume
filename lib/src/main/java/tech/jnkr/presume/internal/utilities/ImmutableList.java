@@ -19,7 +19,7 @@ public sealed interface ImmutableList<T> permits Cons, Nil {
             result = new Cons<>(item, result);
         }
 
-        return result;
+        return result.reverse();
     }
 
     default ImmutableList<T> push(T value) {
@@ -51,17 +51,17 @@ public sealed interface ImmutableList<T> permits Cons, Nil {
     }
 
     default ImmutableList<T> concat(ImmutableList<T> other) {
-        ImmutableList<T> currentThis = this;
-        ImmutableList<T> currentOther = other;
+        ImmutableList<T> currentThis = this.reverse();
+        ImmutableList<T> result = other;
 
         while (true) {
-            switch (currentOther) {
+            switch (currentThis) {
                 case Nil():
-                    return currentThis;
+                    return result;
                 case Cons(T head, ImmutableList<T> tail):
                     {
-                        currentThis = new Cons<>(head, currentThis);
-                        currentOther = tail;
+                        result = new Cons<>(head, result);
+                        currentThis = tail;
                     }
             }
         }
@@ -86,45 +86,6 @@ public sealed interface ImmutableList<T> permits Cons, Nil {
                     }
             }
         }
-    }
-
-    default <U> ImmutableList<U> chain(Function<T, ImmutableList<U>> fn) {
-        ImmutableList<U> result = new Nil<>();
-        ImmutableList<T> current = this;
-
-        while (true) {
-            switch (current) {
-                case Nil():
-                    return result.reverse();
-                case Cons(T head, ImmutableList<T> tail):
-                    {
-                        result = result.concat(fn.apply(head).reverse());
-                        current = tail;
-                    }
-            }
-        }
-    }
-
-    default Maybe<T> getAt(int index) {
-        ImmutableList<T> current = this;
-
-        for (int i = 0; i < index; i++) {
-            switch (current) {
-                case Nil():
-                    {
-                        return Maybe.empty();
-                    }
-                case Cons(var head, var tail):
-                    {
-                        current = tail;
-                    }
-            }
-        }
-
-        return switch (current) {
-            case Nil() -> Maybe.empty();
-            case Cons(var head, var tail) -> Maybe.of(head);
-        };
     }
 
     default <U> ImmutableList<U> filterMap(Function<T, Maybe<U>> fn) {
@@ -157,11 +118,11 @@ public sealed interface ImmutableList<T> permits Cons, Nil {
     }
 
     default ArrayList<T> toArrayList() {
-        ImmutableList<T> reversed = this.reverse();
+        ImmutableList<T> current = this;
         ArrayList<T> result = new ArrayList<>();
 
         while (true) {
-            switch (reversed) {
+            switch (current) {
                 case Nil():
                     {
                         return result;
@@ -169,7 +130,7 @@ public sealed interface ImmutableList<T> permits Cons, Nil {
                 case Cons(T head, ImmutableList<T> tail):
                     {
                         result.add(head);
-                        reversed = tail;
+                        current = tail;
                     }
             }
         }

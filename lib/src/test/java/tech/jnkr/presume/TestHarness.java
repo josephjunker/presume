@@ -1,10 +1,13 @@
 package tech.jnkr.presume;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import static tech.jnkr.presume.PropertyRunner.runProperty;
 
 import org.junit.jupiter.api.Test;
+
+import java.util.List;
 
 class TestHarness {
     @Test
@@ -17,5 +20,48 @@ class TestHarness {
                     // if (!bool) throw new RuntimeException("Was false");
                     assertEquals(true, bool);
                 });
+    }
+
+    @Test
+    void assertThatSortWorks() {
+        runProperty(
+                new ExampleIntListGenerator(),
+                (list) -> {
+                    list.sort(null);
+                    assertTrue(isOrdered(list));
+                });
+    }
+
+    @Test
+    void assertThatBadSortWorks() {
+        runProperty(
+                new ExampleIntListGenerator(),
+                (list) -> {
+                    if (!isOrdered(badSorter(list))) throw new RuntimeException("oh no");
+                },
+                1000);
+    }
+
+    private List<Integer> badSorter(List<Integer> list) {
+        if (list.size() > 3 && (list.get(0) % 2 == 0) && (list.get(3) % 2 == 1)) {
+            list.sort(null);
+            return list.reversed();
+        }
+
+        list.sort(null);
+        return list;
+    }
+
+    private boolean isOrdered(List<Integer> list) {
+        if (list.isEmpty()) return true;
+
+        int lastValue = list.getFirst();
+        for (int i = 1; i < list.size(); i++) {
+            int currentValue = list.get(i);
+            if (lastValue > currentValue) return false;
+            lastValue = currentValue;
+        }
+
+        return true;
     }
 }
