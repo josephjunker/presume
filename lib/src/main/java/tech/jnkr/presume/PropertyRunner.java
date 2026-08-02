@@ -1,9 +1,6 @@
 package tech.jnkr.presume;
 
-import tech.jnkr.presume.exceptions.CounterexampleException;
-import tech.jnkr.presume.exceptions.NondeterminismException;
-import tech.jnkr.presume.exceptions.NondeterministicGeneratorException;
-import tech.jnkr.presume.exceptions.SourceDepletedException;
+import tech.jnkr.presume.exceptions.*;
 import tech.jnkr.presume.internal.History;
 import tech.jnkr.presume.internal.shrinking.Failure;
 import tech.jnkr.presume.internal.shrinking.Shrinker;
@@ -37,8 +34,14 @@ public class PropertyRunner<T> {
 
     private void runOnce() {
         RecordingSource recordingSource = new RecordingSource();
-        // TODO: add a "GeneratorThrewException" and wrap all calls in it
-        T value = recordingSource.call(generator);
+        T value;
+
+        try {
+            value = recordingSource.call(generator);
+        } catch (Throwable e) {
+            throw new GeneratorThrewException(e.toString());
+        }
+
         try {
             property.accept(value);
         } catch (Throwable e) {
@@ -57,7 +60,7 @@ public class PropertyRunner<T> {
                 // Running generation twice should give us identical results, so if there's an
                 // exception while generating the data the second time it's due to a bad
                 // user-provided generator.
-                throw new NondeterministicGeneratorException(e2);
+                throw new FlakyGeneratorException(value, e2.toString());
             }
 
             // We need to make absolutely sure that our replayed value gives the same exception that
@@ -108,6 +111,8 @@ public class PropertyRunner<T> {
                     } catch (SourceDepletedException sourceDepletedException) {
                         // We ran out of atoms and failed to generate input
                         return Maybe.empty();
+                    } catch (Throwable e) {
+                        throw new GeneratorThrewException(e.toString());
                     }
 
                     try {
