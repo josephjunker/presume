@@ -47,22 +47,16 @@ public class TraceZipper {
         return maybeZipper.map(roseZipper -> new TraceZipper(roseZipper, childIndex + 1));
     }
 
-    /*
-    Invariant: the result of this, if it is a Just, always has its focus pointing to
-    a Right(DrawAtom), not to a Down()
-    */
-    public Maybe<TraceZipper> chaseToAtomIndex(int index) {
+    private Maybe<TraceZipper> chaseToNextAtom() {
         var result = Maybe.of(this);
-        int i = 0;
 
-        while (i < index) {
-
+        while (true) {
             switch (result) {
                 case Nothing():
                     return new Nothing<>();
-                case Just(var historyZipper):
+                case Just(var traceZipper):
                     {
-                        switch (historyZipper.composedZipper.value()) {
+                        switch (traceZipper.composedZipper.value()) {
                             // This occurs if we have descended into a generator which
                             // never requested a DrawAtom, resulting in the zipper for this
                             // generator being empty, or if we have already used up all of the
@@ -70,28 +64,48 @@ public class TraceZipper {
                             // right)
                             case Nothing():
                                 {
-                                    result = historyZipper.exitSubtree();
+                                    result = traceZipper.exitSubtree();
                                     continue;
                                 }
                             // We are in a generator which still has DrawAtoms remaining
                             case Just(ListZipper<TraceEntry> listZipper):
                                 {
                                     switch (listZipper.focus()) {
-                                        // We always chase Down immediately, without incrementing
-                                        // i, because `index` is the count of actual *atoms* that
-                                        // we've passed, not the count of TraceEntries.
-                                        case Down() -> result = historyZipper.down();
-                                        case Right(DrawAtom ignored) -> {
-                                            i = i + 1;
-                                            result = historyZipper.right();
-                                        }
+                                        case Down():
+                                            {
+                                                result = traceZipper.down();
+                                                break;
+                                            }
+                                        case Right(DrawAtom ignored):
+                                            {
+                                                // We've finally reached a value; we can return
+                                                return result;
+                                            }
                                     }
                                 }
                         }
                     }
             }
         }
+    }
 
+    /*
+    Invariant: the result of this, if it is a Just, always has its focus pointing to
+    a Right(DrawAtom), not to a Down()
+    */
+    public Maybe<TraceZipper> chaseToAtomIndex(int index) {
+
+        var result = chaseToNextAtom();
+        int i = 0;
+        while (i < index) {
+            switch (result) {
+                case Nothing():
+                    return new Nothing<>();
+                case Just(var traceZipper):
+                    result = traceZipper.chaseToNextAtom();
+            }
+            i++;
+        }
         return result;
     }
 

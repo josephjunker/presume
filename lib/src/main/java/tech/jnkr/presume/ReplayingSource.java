@@ -115,6 +115,11 @@ class ReplayingSource implements GenerationSource {
                     MutableRoseTree<ArrayList<TraceEntry>> childTrace =
                             new MutableRoseTree<>(new ArrayList<>());
                     trace.value.add(new Down());
+                    trace.children.add(childTrace);
+
+                    // Q: We have cases where a `Down` in the parent isn't followed by a `Right`
+                    // in the child. Do we need to add it here or elsewhere?
+                    // A: It *should* be happening in getAtom()
 
                     ReplayingSource childSource =
                             new ReplayingSource(new History(zipper.focus()), childTrace);

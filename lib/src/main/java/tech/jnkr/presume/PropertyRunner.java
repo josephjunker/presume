@@ -39,10 +39,9 @@ public class PropertyRunner<T> {
         try {
             property.accept(value);
         } catch (Exception e) {
-            ReplayingSource replayingSource =
-                    new ReplayingSource(
-                            new History(
-                                    recordingSource.getHistory().map(ImmutableList::toArrayList)));
+            History h = new History(recordingSource.getHistory().map(ImmutableList::toArrayList));
+
+            ReplayingSource replayingSource = new ReplayingSource(h);
 
             try {
                 // We have to re-run generation to get the detailed trace
@@ -59,6 +58,7 @@ public class PropertyRunner<T> {
                                 ReplayingSource source =
                                         new ReplayingSource(
                                                 history, new MutableRoseTree<>(new ArrayList<>()));
+                                System.out.println(source);
                                 try {
                                     T shrunk = source.call(generator);
                                     property.accept(shrunk);
