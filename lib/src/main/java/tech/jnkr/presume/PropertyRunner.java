@@ -58,7 +58,6 @@ public class PropertyRunner<T> {
                                 ReplayingSource source =
                                         new ReplayingSource(
                                                 history, new MutableRoseTree<>(new ArrayList<>()));
-                                System.out.println(source);
                                 try {
                                     T shrunk = source.call(generator);
                                     property.accept(shrunk);
@@ -75,15 +74,19 @@ public class PropertyRunner<T> {
 
             var counterexampleHistory = shrinker.shrink(replayingSource.finalTrace());
 
+            CounterexampleException counterexampleException;
             try {
                 T counterexample =
                         new ReplayingSource(counterexampleHistory.first()).call(generator);
                 // TODO collect stringified seed
-                throw new CounterexampleException(
-                        counterexampleHistory.second(), "", counterexample);
+                counterexampleException =
+                        new CounterexampleException(
+                                counterexampleHistory.second(), "", counterexample);
             } catch (Exception e3) {
                 throw new NondeterministicGeneratorException(e3);
             }
+
+            throw counterexampleException;
         }
     }
 }

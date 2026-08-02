@@ -43,7 +43,7 @@ public sealed interface ImmutableList<T> permits Cons, Nil {
                     return result;
                 case Cons(T head, ImmutableList<T> tail):
                     {
-                        result = new Cons<>(head, tail);
+                        result = new Cons<>(head, result);
                         current = tail;
                     }
             }
@@ -146,7 +146,7 @@ public sealed interface ImmutableList<T> permits Cons, Nil {
                                 }
                             case Just(U value):
                                 {
-                                    result.push(value);
+                                    result = result.push(value);
                                 }
                         }
 
