@@ -10,41 +10,45 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-public class Shrinker {
-    Function<History, Maybe<Trace>> tryReproduce;
+public class Shrinker<T> {
+    Function<History, Maybe<Failure<T>>> tryReproduce;
 
-    public Shrinker(Function<History, Maybe<Trace>> tryReproduce) {
+    public Shrinker(Function<History, Maybe<Failure<T>>> tryReproduce) {
         this.tryReproduce = tryReproduce;
     }
 
-    public Tuple<History, Integer> shrink(Trace trace) {
-        ShrinkResults lastShrinkResults = new ShrinkResults(trace, 0);
-        ShrinkResults currentShrinkResults = doShrinkingPass(lastShrinkResults.trace);
+    public ShrinkResults<T> shrink(Failure<T> failure) {
+        ShrinkResults<T> lastShrinkResults = new ShrinkResults<>(failure, 0);
+        ShrinkResults<T> currentShrinkResults = doShrinkingPass(lastShrinkResults.failure);
         int i = 0;
 
         // TODO: add a timer here, shrink for up to 10 additional seconds instead of using i
-        while (i < 5 && !lastShrinkResults.trace.equals(currentShrinkResults.trace)) {
+        while (i < 5
+                && !lastShrinkResults
+                        .failure
+                        .trace()
+                        .equals(currentShrinkResults.failure.trace())) {
             lastShrinkResults =
-                    new ShrinkResults(
-                            currentShrinkResults.trace,
+                    new ShrinkResults<>(
+                            currentShrinkResults.failure,
                             currentShrinkResults.timesShrunk + lastShrinkResults.timesShrunk);
-            currentShrinkResults = doShrinkingPass(currentShrinkResults.trace);
+            currentShrinkResults = doShrinkingPass(currentShrinkResults.failure);
             i++;
         }
 
-        return new Tuple<>(
-                currentShrinkResults.trace.toHistory(),
+        return new ShrinkResults<>(
+                currentShrinkResults.failure,
                 lastShrinkResults.timesShrunk + currentShrinkResults.timesShrunk);
     }
 
-    private ShrinkResults doShrinkingPass(Trace trace) {
+    private ShrinkResults<T> doShrinkingPass(Failure<T> failure) {
         int index = 0;
-        var currentTrace = trace;
+        var currentFailure = failure;
         int timesShrunk = 0;
 
-        while (index < currentTrace.atomCount()) {
+        while (index < currentFailure.trace().atomCount()) {
             var optionalShrunk =
-                    getTargetAtomShrinks(currentTrace, index)
+                    getTargetAtomShrinks(currentFailure.trace(), index)
                             .limit(10)
                             // We don't need exception handling around SourceDepletedException in
                             // here, because tryReproduce will handle it for us.
@@ -58,16 +62,16 @@ public class Shrinker {
                 index++;
             } else {
                 // `unwrapUnsafe` is safe because of the `filter` above.
-                currentTrace = optionalShrunk.get().unwrapUnsafe();
+                currentFailure = optionalShrunk.get().unwrapUnsafe();
                 index++;
                 timesShrunk++;
             }
         }
 
-        return new ShrinkResults(currentTrace, timesShrunk);
+        return new ShrinkResults<>(currentFailure, timesShrunk);
     }
 
-    private record ShrinkResults(Trace trace, Integer timesShrunk) {}
+    public record ShrinkResults<T>(Failure<T> failure, Integer timesShrunk) {}
 
     private Stream<History> getTargetAtomShrinks(Trace trace, int targetAtomIndex) {
         Maybe<TraceZipper> maybeZipper =
