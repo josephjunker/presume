@@ -166,4 +166,20 @@ public sealed interface ImmutableList<T> permits Cons, Nil {
             }
         }
     }
+
+    default int size() {
+        int length = 0;
+        ImmutableList<T> current = this;
+        while (true) {
+            switch (current) {
+                case Nil():
+                    return length;
+                case Cons(T head, ImmutableList<T> tail):
+                    {
+                        length++;
+                        current = tail;
+                    }
+            }
+        }
+    }
 }

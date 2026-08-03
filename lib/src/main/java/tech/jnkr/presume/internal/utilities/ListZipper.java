@@ -1,8 +1,6 @@
 package tech.jnkr.presume.internal.utilities;
 
 import java.util.Objects;
-import java.util.function.Function;
-import java.util.stream.Stream;
 
 public class ListZipper<T> {
     private final ImmutableList<T> leftSiblings;
@@ -43,40 +41,32 @@ public class ListZipper<T> {
         };
     }
 
-    public ListZipper<T> update(Function<T, T> updater) {
-        return new ListZipper<>(leftSiblings, updater.apply(focus), rightSiblings);
-    }
-
     public ListZipper<T> replace(T newValue) {
         return new ListZipper<>(leftSiblings, newValue, rightSiblings);
     }
 
     public ListZipper<T> leftmost() {
-        ImmutableList<T> leftReversed = leftSiblings.reverse();
+        ImmutableList<T> newRightSiblings = rightSiblings;
+        T newFocus = focus;
+        ImmutableList<T> currentLeftSiblings = leftSiblings;
 
-        return switch (leftReversed) {
-            case Nil() -> this;
-            case Cons(T head, ImmutableList<T> tail) ->
-                    // This may have been the bug
-                    new ListZipper<>(new Nil<>(), head, tail.push(focus).concat(rightSiblings));
-        };
+        while (true) {
+            switch (currentLeftSiblings) {
+                case Nil():
+                    return new ListZipper<>(new Nil<>(), newFocus, newRightSiblings);
+                case Cons(T head, ImmutableList<T> tail):
+                    {
+                        newRightSiblings = newRightSiblings.push(newFocus);
+                        newFocus = head;
+                        currentLeftSiblings = tail;
+                    }
+            }
+        }
     }
 
     public ImmutableList<T> toList() {
         ListZipper<T> reset = leftmost();
         return new Cons<>(reset.focus, reset.rightSiblings);
-    }
-
-    public ImmutableList<ImmutableList<T>> chainUpdate(Function<T, ImmutableList<T>> fn) {
-        return fn.apply(focus).map((T focus) -> this.update((T oldFocus) -> focus).toList());
-    }
-
-    public Stream<ImmutableList<T>> chainUpdateStream(Function<T, Stream<T>> fn) {
-        return fn.apply(focus).map((T focus) -> this.update((T oldFocus) -> focus).toList());
-    }
-
-    public ImmutableList<T> leftSublist() {
-        return leftSiblings.reverse();
     }
 
     @Override

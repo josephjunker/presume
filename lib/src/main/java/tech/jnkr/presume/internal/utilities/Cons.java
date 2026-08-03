@@ -11,6 +11,7 @@ public record Cons<T>(T head, ImmutableList<T> tail) implements ImmutableList<T>
 
         if (!head.equals(otherHead)) return false;
 
+        // TODO: stack safety
         return tail.equals(otherTail);
     }
 

@@ -1,6 +1,7 @@
 package tech.jnkr.presume.internal.utilities;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -129,5 +130,28 @@ public class ImmutableListTests {
                 list.foldLeft(
                         (ImmutableList<Integer> l, Integer i) -> l.push(i), ImmutableList.empty()),
                 list.reverse());
+    }
+
+    @DisplayName("size() agrees with .toList().size()")
+    @ParameterizedTest()
+    @MethodSource("provideLists")
+    void sizeWorks(ImmutableList<Integer> list) {
+        assertEquals(list.size(), list.toArrayList().size());
+    }
+
+    @DisplayName("non-equal lists are not equal")
+    @ParameterizedTest()
+    @MethodSource("provideLists")
+    void inequalitySmokeTest(ImmutableList<Integer> list) {
+        if (list.size() > 0) assertNotEquals(list, list.pop());
+        assertNotEquals(list.push(1), list.push(2));
+    }
+
+    @DisplayName("equal lists are equal")
+    @ParameterizedTest()
+    @MethodSource("provideLists")
+    void equalitySmokeTest(ImmutableList<Integer> list) {
+        assertEquals(list, list);
+        assertEquals(list.push(1), list.push(1));
     }
 }
