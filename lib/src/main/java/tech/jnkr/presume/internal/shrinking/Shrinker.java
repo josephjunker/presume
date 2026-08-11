@@ -23,7 +23,7 @@ public class Shrinker<T> {
         int i = 0;
 
         // TODO: add a timer here, shrink for up to 10 additional seconds instead of using i
-        while (i < 5
+        while (i < 1000
                 && !lastShrinkResults
                         .failure
                         .trace()

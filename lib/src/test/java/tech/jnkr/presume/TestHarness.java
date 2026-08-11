@@ -8,6 +8,7 @@ import static tech.jnkr.presume.PropertyRunner.runProperty;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Disabled
@@ -45,13 +46,15 @@ class TestHarness {
     }
 
     private List<Integer> badSorter(List<Integer> list) {
+        List<Integer> result = new ArrayList<>(list);
+        result.sort(null);
+
         if (list.size() > 3 && (list.get(0) % 2 == 0) && (list.get(2) % 2 == 1)) {
-            list.sort(null);
-            return list.reversed();
+            result.sort(null);
+            return result.reversed();
         }
 
-        list.sort(null);
-        return list;
+        return result;
     }
 
     private boolean isOrdered(List<Integer> list) {
