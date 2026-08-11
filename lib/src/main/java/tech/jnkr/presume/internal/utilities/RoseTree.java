@@ -1,9 +1,6 @@
 package tech.jnkr.presume.internal.utilities;
 
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Objects;
-import java.util.Queue;
+import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -23,16 +20,14 @@ public class RoseTree<T> {
 
     public <U> U foldDepthFirst(BiFunction<U, T, U> fn, U initial) {
         U acc = initial;
-        ArrayList<RoseTree<T>> queue = new ArrayList<>();
-        queue.add(this);
-        int head = 0;
+        Stack<RoseTree<T>> stack = new Stack<>();
+        stack.add(this);
 
-        while (head < queue.size()) {
-            RoseTree<T> current = queue.get(head);
-            head++;
+        while (!stack.isEmpty()) {
+            RoseTree<T> current = stack.pop();
             acc = fn.apply(acc, current.value);
 
-            current.children.forEach(queue::add);
+            current.children.reverse().forEach(stack::add);
         }
 
         return acc;

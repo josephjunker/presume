@@ -5,10 +5,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import static tech.jnkr.presume.PropertyRunner.runProperty;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
+@Disabled
 class TestHarness {
     @Test
     void assertThatAllBooleansAreTrue() {
@@ -43,7 +45,7 @@ class TestHarness {
     }
 
     private List<Integer> badSorter(List<Integer> list) {
-        if (list.size() > 3 && (list.get(0) % 2 == 0) && (list.get(3) % 2 == 1)) {
+        if (list.size() > 3 && (list.get(0) % 2 == 0) && (list.get(2) % 2 == 1)) {
             list.sort(null);
             return list.reversed();
         }

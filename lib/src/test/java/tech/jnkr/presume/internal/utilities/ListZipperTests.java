@@ -68,4 +68,21 @@ public class ListZipperTests {
             assertEquals(maybeZipper.map(ListZipper::toList), Maybe.of(list));
         }
     }
+
+    @DisplayName("replace() replaces the current focus")
+    @ParameterizedTest()
+    @MethodSource("provideLists")
+    void replaceWorksAtLeftmost(@NonNull ImmutableList<Integer> list) {
+        var maybeZipper = list.toZipper();
+        if (maybeZipper instanceof Nothing<ListZipper<Integer>>) return;
+        var zipper = maybeZipper.unwrapUnsafe();
+
+        var newZipper = zipper.replace(42);
+
+        assertEquals(42, newZipper.focus());
+        var newTail = newZipper.toList().pop();
+        var originalTail = zipper.toList().pop();
+
+        assertEquals(newTail, originalTail);
+    }
 }

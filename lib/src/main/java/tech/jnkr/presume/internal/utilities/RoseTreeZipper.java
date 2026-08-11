@@ -79,7 +79,7 @@ public class RoseTreeZipper<T> {
                     ImmutableList<RoseTree<T>> newRightSiblings = rightSiblings;
                     ImmutableList<RoseTree<T>> cursor = leftSiblings;
 
-                    rightSiblings.push(focus);
+                    newRightSiblings = rightSiblings.push(focus);
 
                     while (cursor instanceof Cons) {
                         newRightSiblings =

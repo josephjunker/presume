@@ -12,6 +12,10 @@ public sealed interface ImmutableList<T> permits Cons, Nil {
         return new Nil<>();
     }
 
+    static <T> ImmutableList<T> of(T value) {
+        return new Cons<>(value, new Nil<>());
+    }
+
     static <T> ImmutableList<T> fromList(List<T> list) {
         ImmutableList<T> result = new Nil<>();
 
