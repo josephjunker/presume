@@ -73,7 +73,7 @@ class RecordingSource implements GenerationSource {
     public <T> T call(AbstractGenerator<T> generator) {
         RecordingSource childSource = new RecordingSource();
         children.add(childSource);
-        return generator.gen(childSource);
+        return generator.internalGen(childSource);
     }
 
     DrawAtom getAtom() {

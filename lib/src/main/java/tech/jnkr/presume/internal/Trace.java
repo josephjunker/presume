@@ -9,6 +9,7 @@ import tech.jnkr.presume.internal.utilities.Maybe;
 import tech.jnkr.presume.internal.utilities.RoseTree;
 
 import java.util.ArrayList;
+import java.util.Objects;
 
 public class Trace {
     public final RoseTree<ImmutableList<TraceEntry>> contents;
@@ -44,5 +45,16 @@ public class Trace {
                                         },
                                 total),
                 0);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof Trace trace)) return false;
+        return Objects.equals(contents, trace.contents);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(contents);
     }
 }

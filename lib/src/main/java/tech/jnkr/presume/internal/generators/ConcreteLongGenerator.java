@@ -48,7 +48,7 @@ public class ConcreteLongGenerator implements SimpleGenerator<Long>, LongGenerat
     }
 
     private Long produce(DrawAtom atom) {
-        if (minimum < maximum)
+        if (minimum > maximum)
             throw new InvalidGeneratorException(
                     String.format(
                             "Encountered a Long generator with a minimum greater than its"

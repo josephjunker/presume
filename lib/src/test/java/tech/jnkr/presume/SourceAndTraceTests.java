@@ -1,0 +1,138 @@
+package tech.jnkr.presume;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import org.jspecify.annotations.NonNull;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.RepeatedTest;
+
+import tech.jnkr.presume.generators.GenerationSource;
+import tech.jnkr.presume.internal.History;
+import tech.jnkr.presume.internal.utilities.ImmutableList;
+
+public class SourceAndTraceTests {
+    public static class SampleGenerator1 extends AbstractGenerator<ImmutableList<Object>> {
+        @Override
+        protected ImmutableList<Object> gen(@NonNull GenerationSource drawer) {
+            ImmutableList<Object> result = ImmutableList.empty();
+
+            result = result.push(drawer.getLong());
+            result = result.push(drawer.getFloat());
+            result = result.push(drawer.call(new SampleGenerator2()));
+            result = result.push(drawer.getBoolean());
+            result = result.push(drawer.call(new SampleGenerator2()));
+            result = result.push(drawer.call(new SampleGenerator3()));
+            result = result.push(drawer.getDouble());
+
+            result = result.push(drawer.call(new SampleGenerator5()));
+
+            return result;
+        }
+    }
+
+    public static class SampleGenerator2 extends AbstractGenerator<ImmutableList<Object>> {
+
+        @Override
+        protected ImmutableList<Object> gen(@NonNull GenerationSource drawer) {
+            ImmutableList<Object> result = ImmutableList.empty();
+
+            result = result.push(drawer.call(new SampleGenerator4()));
+            result = result.push(drawer.getInteger());
+
+            return result;
+        }
+    }
+
+    public static class SampleGenerator3 extends AbstractGenerator<ImmutableList<Object>> {
+
+        @Override
+        protected ImmutableList<Object> gen(@NonNull GenerationSource drawer) {
+            ImmutableList<Object> result = ImmutableList.empty();
+
+            result = result.push(drawer.call(new SampleGenerator2()));
+            result = result.push(drawer.call(new SampleGenerator2()));
+
+            return result;
+        }
+    }
+
+    public static class SampleGenerator4 extends AbstractGenerator<Boolean> {
+        @Override
+        protected Boolean gen(@NonNull GenerationSource drawer) {
+            return true;
+        }
+    }
+
+    public static class SampleGenerator5 extends AbstractGenerator<ImmutableList<Object>> {
+        @Override
+        protected ImmutableList<Object> gen(@NonNull GenerationSource drawer) {
+            int length = drawer.integerGen().withMinimum(0).withMaximum(10).gen();
+            ImmutableList<Object> result = ImmutableList.empty();
+
+            for (int i = 0; i < length; i++) {
+                var intermediate =
+                        drawer.getBoolean()
+                                ? drawer.call(new SampleGenerator3())
+                                : drawer.call(new SampleGenerator2());
+
+                result = result.push(intermediate);
+            }
+
+            return result;
+        }
+    }
+
+    @RepeatedTest(100)
+    @DisplayName("Replaying a recording gives the same result")
+    public void recordThenReplay() {
+        RecordingSource recordingSource = new RecordingSource();
+
+        ImmutableList<Object> generated = recordingSource.call(new SampleGenerator1());
+        // TODO: getHistory() should return History
+        History recordedHistory =
+                new History(recordingSource.getHistory().map(ImmutableList::toArrayList));
+
+        ReplayingSource replayingSource1 = new ReplayingSource(recordedHistory);
+        ImmutableList<Object> replayed1 = replayingSource1.call(new SampleGenerator1());
+
+        assertEquals(generated, replayed1);
+    }
+
+    @RepeatedTest(100)
+    @DisplayName("Replaying a replay gives the same result")
+    public void replayThenReplay() {
+        RecordingSource recordingSource = new RecordingSource();
+
+        recordingSource.call(new SampleGenerator1());
+        History recordedHistory =
+                new History(recordingSource.getHistory().map(ImmutableList::toArrayList));
+
+        ReplayingSource replayingSource1 = new ReplayingSource(recordedHistory);
+        ImmutableList<Object> replayed1 = replayingSource1.call(new SampleGenerator1());
+
+        ReplayingSource replayingSource2 =
+                new ReplayingSource(replayingSource1.finalTrace().toHistory());
+        ImmutableList<Object> replayed2 = replayingSource2.call(new SampleGenerator1());
+
+        assertEquals(replayed1, replayed2);
+    }
+
+    @RepeatedTest(100)
+    @DisplayName("Replaying a replay gives the same trace")
+    public void replayThenReplayTrace() {
+        RecordingSource recordingSource = new RecordingSource();
+
+        recordingSource.call(new SampleGenerator1());
+        History recordedHistory =
+                new History(recordingSource.getHistory().map(ImmutableList::toArrayList));
+
+        ReplayingSource replayingSource1 = new ReplayingSource(recordedHistory);
+        replayingSource1.call(new SampleGenerator1());
+
+        ReplayingSource replayingSource2 =
+                new ReplayingSource(replayingSource1.finalTrace().toHistory());
+        replayingSource2.call(new SampleGenerator1());
+
+        assertEquals(replayingSource1.finalTrace(), replayingSource2.finalTrace());
+    }
+}

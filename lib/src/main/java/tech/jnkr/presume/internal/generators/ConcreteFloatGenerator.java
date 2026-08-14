@@ -86,7 +86,7 @@ public class ConcreteFloatGenerator implements SimpleGenerator<Float>, FloatGene
     }
 
     private Float produce(DrawAtom atom) {
-        if (minimum < maximum)
+        if (minimum > maximum)
             throw new InvalidGeneratorException(
                     String.format(
                             "Encountered a Float generator with a minimum greater than its"

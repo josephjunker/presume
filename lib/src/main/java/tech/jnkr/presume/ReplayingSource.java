@@ -47,7 +47,6 @@ class ReplayingSource implements GenerationSource {
                 throw new SourceDepletedException();
             case Just(ListZipper<DrawAtom> zipper):
                 {
-                    // I switched these, does that fix it?
                     DrawAtom result = zipper.focus();
                     atomCursor = zipper.right();
 
@@ -123,12 +122,12 @@ class ReplayingSource implements GenerationSource {
                             new ReplayingSource(new History(zipper.focus()), childTrace);
                     childCursor = zipper.right();
 
-                    return generator.internalGen(childSource);
+                    return generator.gen(childSource);
                 }
         }
     }
 
-    public Trace finalTrace() {
+    Trace finalTrace() {
         return new Trace(trace.map(ImmutableList::fromList).toImmutable());
     }
 }
