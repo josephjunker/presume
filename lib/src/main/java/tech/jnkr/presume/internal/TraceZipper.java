@@ -6,7 +6,6 @@ import tech.jnkr.presume.internal.shrinking.Right;
 import tech.jnkr.presume.internal.shrinking.TraceEntry;
 import tech.jnkr.presume.internal.utilities.*;
 
-import java.util.ArrayList;
 import java.util.function.Function;
 
 public class TraceZipper {
@@ -120,31 +119,9 @@ public class TraceZipper {
                                                 .orDefault(ImmutableList.empty())));
     }
 
-    public RoseTree<ArrayList<DrawAtom>> toHistory() {
-        return composedZipper
-                .toTree()
-                .map(
-                        maybeZipper -> {
-                            ImmutableList<TraceEntry> entries =
-                                    maybeZipper
-                                            .map(ListZipper::toList)
-                                            .orDefault(ImmutableList.empty());
-
-                            ImmutableList<DrawAtom> atoms =
-                                    entries.filterMap(
-                                            entry ->
-                                                    switch (entry) {
-                                                        case Down() -> new Nothing<>();
-                                                        case Right(DrawAtom atom) -> Maybe.of(atom);
-                                                    });
-
-                            return atoms.toArrayList();
-                        });
-    }
-
     public Maybe<DrawAtom> focus() {
         // We want to make sure we're pointing at a Right(), if any Rights remain in the tree.
-        Maybe<TraceZipper> normalized = chaseToAtomIndex(0);
+        Maybe<TraceZipper> normalized = chaseToNextAtom();
 
         return normalized.chain(
                 historyZipper ->
@@ -162,9 +139,9 @@ public class TraceZipper {
 
     public Maybe<TraceZipper> replace(DrawAtom atom) {
         // normalized will point to a Right, if it exists
-        Maybe<TraceZipper> normalized = chaseToAtomIndex(0);
+        Maybe<TraceZipper> normalized = chaseToNextAtom();
 
-        // This will always be a Just, because of chaseToAtomIndex's invariant
+        // This will always be a Just, because of chaseToNextAtom's invariant
         Function<Maybe<ListZipper<TraceEntry>>, Maybe<ListZipper<TraceEntry>>> updateInnerZipper =
                 (maybeListZipper ->
                         maybeListZipper.map(listZipper -> listZipper.replace(new Right(atom))));

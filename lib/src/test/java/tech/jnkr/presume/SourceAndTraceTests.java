@@ -1,6 +1,7 @@
 package tech.jnkr.presume;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.DisplayName;
@@ -8,7 +9,12 @@ import org.junit.jupiter.api.RepeatedTest;
 
 import tech.jnkr.presume.generators.GenerationSource;
 import tech.jnkr.presume.internal.History;
+import tech.jnkr.presume.internal.Trace;
+import tech.jnkr.presume.internal.TraceZipper;
 import tech.jnkr.presume.internal.utilities.ImmutableList;
+import tech.jnkr.presume.internal.utilities.Just;
+import tech.jnkr.presume.internal.utilities.Maybe;
+import tech.jnkr.presume.internal.utilities.Nothing;
 
 public class SourceAndTraceTests {
     public static class SampleGenerator1 extends AbstractGenerator<ImmutableList<Object>> {
@@ -51,6 +57,8 @@ public class SourceAndTraceTests {
 
             result = result.push(drawer.call(new SampleGenerator2()));
             result = result.push(drawer.call(new SampleGenerator2()));
+            result = result.push(drawer.call(new SampleGenerator4()));
+            result = result.push(drawer.getFloat());
 
             return result;
         }
@@ -134,5 +142,31 @@ public class SourceAndTraceTests {
         replayingSource2.call(new SampleGenerator1());
 
         assertEquals(replayingSource1.finalTrace(), replayingSource2.finalTrace());
+    }
+
+    @RepeatedTest(100)
+    @DisplayName("A trace zipper can convert to a trace")
+    public void zipperToTrace() {
+        RecordingSource recordingSource = new RecordingSource();
+
+        recordingSource.call(new SampleGenerator1());
+        History recordedHistory =
+                new History(recordingSource.getHistory().map(ImmutableList::toArrayList));
+
+        ReplayingSource replayingSource = new ReplayingSource(recordedHistory);
+        replayingSource.call(new SampleGenerator1());
+
+        Trace trace = replayingSource.finalTrace();
+
+        for (int i = 0; i < 200; i++) {
+            Maybe<Trace> navigated = trace.toZipper().chaseToAtomIndex(i).map(TraceZipper::toTrace);
+
+            if (i < 20) assertTrue(navigated.isJust());
+
+            switch (navigated) {
+                case Nothing() -> {}
+                case Just(Trace x) -> assertEquals(x, trace);
+            }
+        }
     }
 }

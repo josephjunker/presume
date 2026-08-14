@@ -34,6 +34,10 @@ public class Trace {
         return new History(historyContents);
     }
 
+    public TraceZipper toZipper() {
+        return TraceZipper.fromTrace(this);
+    }
+
     public int atomCount() {
         return contents.foldDepthFirst(
                 (Integer total, ImmutableList<TraceEntry> list) ->
