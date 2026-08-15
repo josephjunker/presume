@@ -124,8 +124,9 @@ public class TraceZipper {
         Maybe<TraceZipper> normalized = chaseToNextAtom();
 
         return normalized.chain(
-                historyZipper ->
-                        composedZipper
+                traceZipper ->
+                        traceZipper
+                                .composedZipper
                                 .value()
                                 .map(
                                         listZipper -> {

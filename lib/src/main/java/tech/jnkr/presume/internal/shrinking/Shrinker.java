@@ -47,9 +47,10 @@ public class Shrinker<T> {
         int timesShrunk = 0;
 
         while (index < currentFailure.trace().atomCount()) {
+            System.out.printf("index: %d%n", index);
             var optionalShrunk =
                     getTargetAtomShrinks(currentFailure.trace(), index)
-                            .limit(10)
+                            .limit(100)
                             // We don't need exception handling around SourceDepletedException in
                             // here, because tryReproduce will handle it for us.
                             .map(tryReproduce)
@@ -60,6 +61,7 @@ public class Shrinker<T> {
                 // We failed to reduce the test case by shrinking the current atom.
                 // Move on to attempt the next atom.
                 index++;
+                System.out.println("Was empty");
             } else {
                 // `unwrapUnsafe` is safe because of the `filter` above.
                 currentFailure = optionalShrunk.get().unwrapUnsafe();
