@@ -100,11 +100,20 @@ public class TraceZipperTests {
     }
 
     @Test
+    @DisplayName("chaseToAtomIndex(0) is the same as focus()")
+    public void chasingToIndex0IsFocus() {
+        TraceZipper zipper = trace.toZipper();
+        assertEquals(zipper.focus(), zipper.chaseToAtomIndex(0).chain(TraceZipper::focus));
+    }
+
+    @Test
     @DisplayName("Trace matches expected structure")
     public void tracesMatch() {
         TraceZipper zipper = trace.toZipper();
 
         assertFocusValue(zipper, traceStructure.firstSub.first);
+        assertFocusValue(zipper.chaseToAtomIndex(1), traceStructure.firstSub.second);
+        // assertFocusValue(zipper.chaseToAtomIndex(2), traceStructure.first);
     }
 
     public void assertFocusValue(TraceZipper zipper, int value) {
@@ -115,6 +124,13 @@ public class TraceZipperTests {
                 ConcreteIntegerGenerator intGen = new ConcreteIntegerGenerator(() -> atom);
                 assertEquals(intGen.gen(), value);
             }
+        }
+    }
+
+    public void assertFocusValue(Maybe<TraceZipper> maybeZipper, int value) {
+        switch (maybeZipper) {
+            case Nothing() -> throw new RuntimeException("Expected a non-empty Maybe<TraceZipper>");
+            case Just(var zipper) -> assertFocusValue(zipper, value);
         }
     }
 }

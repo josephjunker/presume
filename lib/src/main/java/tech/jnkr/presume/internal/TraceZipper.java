@@ -6,6 +6,7 @@ import tech.jnkr.presume.internal.shrinking.Right;
 import tech.jnkr.presume.internal.shrinking.TraceEntry;
 import tech.jnkr.presume.internal.utilities.*;
 
+import java.util.Objects;
 import java.util.function.Function;
 
 public class TraceZipper {
@@ -42,6 +43,13 @@ public class TraceZipper {
     // shrinking
     public Maybe<TraceZipper> exitSubtree() {
         var maybeZipper = composedZipper.up();
+
+        // TODO: this childIndex thing makes no sense. What if we exit two subtrees in a row?
+        // We probably need to have the contents of this thing be RoseTree<Pair<int,
+        // ImmutableList<TraceEntry>>> where the int is the current child index? Or something?
+        // Problem is that this child index really needs to be folded into the rose tree's
+        // breadcrumbs. It's a little weird to have to pre-populate the whole tree with zeros to
+        // start.
 
         return maybeZipper.map(roseZipper -> new TraceZipper(roseZipper, childIndex + 1));
     }
@@ -101,7 +109,15 @@ public class TraceZipper {
                 case Nothing():
                     return new Nothing<>();
                 case Just(var traceZipper):
-                    result = traceZipper.chaseToNextAtom();
+                    var right = traceZipper.right();
+                    result =
+                            switch (right) {
+                                case Nothing() ->
+                                        traceZipper
+                                                .exitSubtree()
+                                                .chain(TraceZipper::chaseToNextAtom);
+                                case Just(var value) -> right.chain(TraceZipper::chaseToNextAtom);
+                            };
             }
             i++;
         }
@@ -152,5 +168,16 @@ public class TraceZipper {
                         new TraceZipper(
                                 historyZipper.composedZipper.update(updateInnerZipper),
                                 childIndex));
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof TraceZipper that)) return false;
+        return childIndex == that.childIndex && Objects.equals(composedZipper, that.composedZipper);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(composedZipper, childIndex);
     }
 }
