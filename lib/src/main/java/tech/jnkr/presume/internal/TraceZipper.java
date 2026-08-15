@@ -10,52 +10,64 @@ import java.util.Objects;
 import java.util.function.Function;
 
 public class TraceZipper {
-    private final RoseTreeZipper<Maybe<ListZipper<TraceEntry>>> composedZipper;
-    private final int childIndex;
+    private final RoseTreeZipper<Tuple<Integer, Maybe<ListZipper<TraceEntry>>>> composedZipper;
 
     private TraceZipper(
-            RoseTreeZipper<Maybe<ListZipper<TraceEntry>>> composedZipper, int childIndex) {
+            RoseTreeZipper<Tuple<Integer, Maybe<ListZipper<TraceEntry>>>> composedZipper) {
         this.composedZipper = composedZipper;
-        this.childIndex = childIndex;
     }
 
     public static TraceZipper fromTrace(Trace trace) {
         return new TraceZipper(
-                RoseTreeZipper.fromTree(trace.contents.map(ImmutableList::toZipper)), 0);
+                RoseTreeZipper.fromTree(
+                        trace.contents.map(list -> new Tuple<>(0, list.toZipper()))));
     }
 
     public Maybe<TraceZipper> right() {
-        var inner = composedZipper.value().chain(ListZipper::right);
+        Tuple<Integer, Maybe<ListZipper<TraceEntry>>> inner = composedZipper.value();
 
-        return inner.map(
-                listZipper ->
-                        new TraceZipper(composedZipper.replace(Maybe.of(listZipper)), childIndex));
+        Maybe<ListZipper<TraceEntry>> newInner = inner.second().chain(ListZipper::right);
+
+        return newInner.isJust()
+                ? new Just<>(
+                        new TraceZipper(
+                                composedZipper.replace(new Tuple<>(inner.first(), newInner))))
+                : new Nothing<>();
     }
 
     public Maybe<TraceZipper> down() {
-        var maybeZipper = composedZipper.nthChild(childIndex);
-
-        return maybeZipper.map(roseZipper -> new TraceZipper(roseZipper, childIndex));
+        return composedZipper.nthChild(composedZipper.value().first()).map(TraceZipper::new);
     }
 
     // Note that this moves us both up AND right!
     // This is because we don't want to re-enter a subtree after we've already used it during
-    // shrinking
-    public Maybe<TraceZipper> exitSubtree() {
-        var maybeZipper = composedZipper.up();
+    // shrinking.
+    // It can move us up more than one level, because that's just how I can make the types work out.
+    public Maybe<TraceZipper> chaseExitSubtree() {
 
-        // TODO: this childIndex thing makes no sense. What if we exit two subtrees in a row?
-        // We probably need to have the contents of this thing be RoseTree<Pair<int,
-        // ImmutableList<TraceEntry>>> where the int is the current child index? Or something?
-        // Problem is that this child index really needs to be folded into the rose tree's
-        // breadcrumbs. It's a little weird to have to pre-populate the whole tree with zeros to
-        // start.
+        var parent = composedZipper.up();
 
-        return maybeZipper.map(roseZipper -> new TraceZipper(roseZipper, childIndex + 1));
+        return switch (parent) {
+            case Nothing() -> new Nothing<>();
+            case Just(var treeZipper) -> {
+                int newChildIndex = treeZipper.value().first() + 1;
+                var rightZipper = treeZipper.value().second().chain(ListZipper::right);
+
+                yield switch (rightZipper) {
+                    case Nothing() -> new TraceZipper(treeZipper).chaseExitSubtree();
+                    case Just(var newRight) ->
+                            Maybe.of(
+                                    new TraceZipper(
+                                            treeZipper.replace(
+                                                    new Tuple<>(
+                                                            newChildIndex, Maybe.of(newRight)))));
+                };
+            }
+        };
     }
 
     private Maybe<TraceZipper> chaseToNextAtom() {
-        var result = Maybe.of(this);
+        Maybe<TraceZipper> result = Maybe.of(this);
 
         while (true) {
             switch (result) {
@@ -63,7 +75,9 @@ public class TraceZipper {
                     return new Nothing<>();
                 case Just(var traceZipper):
                     {
-                        switch (traceZipper.composedZipper.value()) {
+                        var tuple = traceZipper.composedZipper.value();
+
+                        switch (tuple.second()) {
                             // This occurs if we have descended into a generator which
                             // never requested a DrawAtom, resulting in the zipper for this
                             // generator being empty, or if we have already used up all of the
@@ -71,16 +85,27 @@ public class TraceZipper {
                             // right)
                             case Nothing():
                                 {
-                                    result = traceZipper.exitSubtree();
+                                    result = traceZipper.chaseExitSubtree();
                                     continue;
                                 }
                             // We are in a generator which still has DrawAtoms remaining
-                            case Just(ListZipper<TraceEntry> listZipper):
+                            case Just(var innerZipper):
                                 {
-                                    switch (listZipper.focus()) {
+                                    switch (innerZipper.focus()) {
                                         case Down():
                                             {
-                                                result = traceZipper.down();
+                                                // TODO not sure about this
+                                                // The idea here is that if we descend into a
+                                                // generator which never pulled a value, we should
+                                                // then just exit back out of it and continue
+                                                var down = traceZipper.down();
+                                                result =
+                                                        switch (down) {
+                                                            case Nothing() ->
+                                                                    traceZipper.chaseExitSubtree();
+                                                            case Just(var ignored) -> down;
+                                                        };
+
                                                 break;
                                             }
                                         case Right(DrawAtom ignored):
@@ -114,7 +139,7 @@ public class TraceZipper {
                             switch (right) {
                                 case Nothing() ->
                                         traceZipper
-                                                .exitSubtree()
+                                                .chaseExitSubtree()
                                                 .chain(TraceZipper::chaseToNextAtom);
                                 case Just(var value) -> right.chain(TraceZipper::chaseToNextAtom);
                             };
@@ -129,8 +154,8 @@ public class TraceZipper {
                 composedZipper
                         .toTree()
                         .map(
-                                maybeZipper ->
-                                        maybeZipper
+                                tuple ->
+                                        tuple.second()
                                                 .map(ListZipper::toList)
                                                 .orDefault(ImmutableList.empty())));
     }
@@ -144,9 +169,10 @@ public class TraceZipper {
                         traceZipper
                                 .composedZipper
                                 .value()
+                                .second()
                                 .map(
-                                        listZipper -> {
-                                            TraceEntry focus = listZipper.focus();
+                                        innerZipper -> {
+                                            TraceEntry focus = innerZipper.focus();
 
                                             // Because of the invariant enforced by
                                             // chaseToAtomIndex, we know we're pointing at a Right.
@@ -159,25 +185,32 @@ public class TraceZipper {
         Maybe<TraceZipper> normalized = chaseToNextAtom();
 
         // This will always be a Just, because of chaseToNextAtom's invariant
-        Function<Maybe<ListZipper<TraceEntry>>, Maybe<ListZipper<TraceEntry>>> updateInnerZipper =
-                (maybeListZipper ->
-                        maybeListZipper.map(listZipper -> listZipper.replace(new Right(atom))));
+        Function<
+                        Tuple<Integer, Maybe<ListZipper<TraceEntry>>>,
+                        Tuple<Integer, Maybe<ListZipper<TraceEntry>>>>
+                updateInnerZipper =
+                        (tuple ->
+                                new Tuple<>(
+                                        tuple.first(),
+                                        tuple.second()
+                                                .map(
+                                                        innerZipper ->
+                                                                innerZipper.replace(
+                                                                        new Right(atom)))));
 
         return normalized.map(
                 historyZipper ->
-                        new TraceZipper(
-                                historyZipper.composedZipper.update(updateInnerZipper),
-                                childIndex));
+                        new TraceZipper(historyZipper.composedZipper.update(updateInnerZipper)));
     }
 
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof TraceZipper that)) return false;
-        return childIndex == that.childIndex && Objects.equals(composedZipper, that.composedZipper);
+        return Objects.equals(composedZipper, that.composedZipper);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(composedZipper, childIndex);
+        return Objects.hash(composedZipper);
     }
 }

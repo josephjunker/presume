@@ -44,6 +44,7 @@ public class TraceZipperTests {
             TestTraceStructure2 secondSub = source.call(new Generator2());
             TestTraceStructure2 thirdSub = source.call(new Generator2());
             int x2 = source.getInteger();
+            source.call(new Generator5());
             int x3 = source.getInteger();
 
             return new TestTraceStructure1(firstSub, x1, secondSub, thirdSub, x2, x3);
@@ -82,6 +83,14 @@ public class TraceZipperTests {
         }
     }
 
+    public static class Generator5 extends AbstractGenerator<Boolean> {
+        @Override
+        protected Boolean gen(GenerationSource source) {
+            source.call(new Generator4());
+            return true;
+        }
+    }
+
     Trace trace;
     TestTraceStructure1 traceStructure;
 
@@ -113,7 +122,8 @@ public class TraceZipperTests {
 
         assertFocusValue(zipper, traceStructure.firstSub.first);
         assertFocusValue(zipper.chaseToAtomIndex(1), traceStructure.firstSub.second);
-        // assertFocusValue(zipper.chaseToAtomIndex(2), traceStructure.first);
+        assertFocusValue(zipper.chaseToAtomIndex(2), traceStructure.first);
+        // TODO: finish this test
     }
 
     public void assertFocusValue(TraceZipper zipper, int value) {
