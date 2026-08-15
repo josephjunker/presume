@@ -23,7 +23,7 @@ public class Shrinker<T> {
         int i = 0;
 
         // TODO: add a timer here, shrink for up to 10 additional seconds instead of using i
-        while (i < 1000
+        while (i < 10000
                 && !lastShrinkResults
                         .failure
                         .trace()
@@ -47,10 +47,8 @@ public class Shrinker<T> {
         int timesShrunk = 0;
 
         while (index < currentFailure.trace().atomCount()) {
-            System.out.printf("index: %d%n", index);
             var optionalShrunk =
                     getTargetAtomShrinks(currentFailure.trace(), index)
-                            .limit(100)
                             // We don't need exception handling around SourceDepletedException in
                             // here, because tryReproduce will handle it for us.
                             .map(tryReproduce)
@@ -61,7 +59,6 @@ public class Shrinker<T> {
                 // We failed to reduce the test case by shrinking the current atom.
                 // Move on to attempt the next atom.
                 index++;
-                System.out.println("Was empty");
             } else {
                 // `unwrapUnsafe` is safe because of the `filter` above.
                 currentFailure = optionalShrunk.get().unwrapUnsafe();
@@ -111,21 +108,32 @@ public class Shrinker<T> {
             case Regular(float ratio, boolean sign, boolean simplify) -> {
                 Stream<DrawAtom> trivials = Stream.of(new Trivial1(), new Trivial2());
                 Stream<DrawAtom> flags = simplifyFlags(ratio, sign, simplify);
-                Stream<Regular> reduced =
-                        Stream.iterate(
-                                new Regular(ratio / 2f, sign, simplify),
-                                r -> new Regular(r.ratio() / 2f, r.sign(), r.simplify()));
+                Stream<Float> reductionSchedule =
+                        Stream.of(
+                                1000f, 500f, 100f, 20f, 10f, 2f, 1.5f, 1.4f, 1.25f, 1.1f, 1.05f,
+                                1.01f, 1.001f, 1.0001f, 1.000001f);
+
+                Stream<DrawAtom> reduced =
+                        reductionSchedule.flatMap(
+                                reductionRatio ->
+                                        simplifyFlags(ratio / reductionRatio, sign, simplify));
+
+                yield Stream.concat(Stream.concat(trivials, flags), reduced);
+            }
+            case Edge(float ratio, boolean sign) -> {
+                // Any "regular" is "smaller" than an "Edge" from the shrinker's
+                // perspective, so increasing the ratio here doesn't break our guarantees
+                Stream<Float> regularShrinkRatios =
+                        Stream.iterate(0f, value -> value < 1f, value -> value + 0.01f);
+
+                Stream<DrawAtom> regularShrinks =
+                        regularShrinkRatios.flatMap(
+                                syntheticRatio -> simplifyFlags(syntheticRatio, false, false));
 
                 yield Stream.concat(
-                        Stream.concat(trivials, flags),
-                        reduced.flatMap(
-                                r ->
-                                        Stream.concat(
-                                                Stream.of(r),
-                                                simplifyFlags(r.ratio(), r.sign(), r.simplify()))));
+                        Stream.concat(Stream.of(new Trivial1(), new Trivial2()), regularShrinks),
+                        simplifyFlags(ratio, false, false));
             }
-            case Edge(float ratio, boolean sign) ->
-                    Stream.of(new Trivial1(), new Trivial2(), new Regular(ratio, sign, false));
         };
     }
 
