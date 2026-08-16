@@ -56,10 +56,12 @@ public class Shrinker<T> {
                             .findFirst();
 
             if (optionalShrunk.isEmpty()) {
+                System.out.println("empty");
                 // We failed to reduce the test case by shrinking the current atom.
                 // Move on to attempt the next atom.
                 index++;
             } else {
+                System.out.println("reduced");
                 // `unwrapUnsafe` is safe because of the `filter` above.
                 currentFailure = optionalShrunk.get().unwrapUnsafe();
                 index++;
@@ -111,12 +113,19 @@ public class Shrinker<T> {
                 Stream<Float> reductionSchedule =
                         Stream.of(
                                 1000f, 500f, 100f, 20f, 10f, 2f, 1.5f, 1.4f, 1.25f, 1.1f, 1.05f,
-                                1.01f, 1.001f, 1.0001f, 1.000001f);
+                                1.01f, 1.001f, 1.0001f);
 
                 Stream<DrawAtom> reduced =
                         reductionSchedule.flatMap(
                                 reductionRatio ->
-                                        simplifyFlags(ratio / reductionRatio, sign, simplify));
+                                        Stream.concat(
+                                                simplifyFlags(
+                                                        ratio / reductionRatio, sign, simplify),
+                                                Stream.of(
+                                                        new Regular(
+                                                                ratio / reductionRatio,
+                                                                sign,
+                                                                simplify))));
 
                 yield Stream.concat(Stream.concat(trivials, flags), reduced);
             }
@@ -128,7 +137,12 @@ public class Shrinker<T> {
 
                 Stream<DrawAtom> regularShrinks =
                         regularShrinkRatios.flatMap(
-                                syntheticRatio -> simplifyFlags(syntheticRatio, false, false));
+                                syntheticRatio ->
+                                        Stream.concat(
+                                                simplifyFlags(syntheticRatio, false, false),
+                                                Stream.of(
+                                                        new Regular(
+                                                                syntheticRatio, false, false))));
 
                 yield Stream.concat(
                         Stream.concat(Stream.of(new Trivial1(), new Trivial2()), regularShrinks),
