@@ -59,7 +59,7 @@ public class ConcreteLongGenerator implements SimpleGenerator<Long>, LongGenerat
                 switch (atom) {
                     case Trivial1() -> 0;
                     case Trivial2() -> 1;
-                    case Regular(float ratio, boolean sign, boolean simplify) -> {
+                    case Regular(double ratio, boolean sign, boolean simplify) -> {
                         if (sign) {
                             long anchor = Math.max(approaching, minimum);
                             long positiveRange = maximum - anchor;

@@ -33,7 +33,7 @@ public class ConcreteIntegerGeneratorTests {
         int evenCount = 0;
         int oddCount = 0;
         for (int i = 0; i < 1000; i++) {
-            if (((int) ((float) Integer.MAX_VALUE * random.nextFloat())) % 2 == 0) {
+            if (((int) ((double) Integer.MAX_VALUE * random.nextDouble())) % 2 == 0) {
                 evenCount++;
             } else {
                 oddCount++;

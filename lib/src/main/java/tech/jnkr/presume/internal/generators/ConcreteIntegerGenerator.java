@@ -55,28 +55,45 @@ public class ConcreteIntegerGenerator
                                     + " maximum. Minimum value: %d, maximum value: %d",
                             minimum, maximum));
 
-        return Math.clamp(
-                switch (atom) {
-                    case Trivial1() -> approaching;
-                    case Trivial2() -> approaching;
-                    case Regular(float ratio, boolean sign, boolean simplify) -> {
-                        if (sign) {
-                            int anchor = Math.max(approaching, minimum);
-                            int positiveRange = maximum - anchor;
-                            yield (int) (ratio * positiveRange) + anchor;
-                        } else {
-                            int anchor = Math.min(approaching, maximum);
-                            int negativeRange = minimum - anchor;
-                            yield (int) (ratio * negativeRange) + anchor;
-                        }
-                    }
-                    case Edge(float ratio, boolean sign) -> {
-                        if (ratio < 0.3) yield approaching;
-                        if (ratio < 0.6) yield sign ? approaching - 1 : approaching + 1;
-                        yield sign ? minimum : maximum;
-                    }
-                },
-                minimum,
-                maximum);
+        int result =
+                Math.clamp(
+                        switch (atom) {
+                            case Trivial1() -> approaching;
+                            case Trivial2() -> approaching;
+                            case Regular(double ratio, boolean sign, boolean simplify) -> {
+                                if (minimum >= 0) {
+                                    yield generatePositive(ratio);
+                                } else if (maximum <= 0) {
+                                    yield generateNegative(ratio);
+                                } else if (sign) {
+                                    yield generatePositive(ratio);
+                                } else {
+                                    yield generateNegative(ratio);
+                                }
+                            }
+                            case Edge(float ratio, boolean sign) -> {
+                                if (ratio < 0.3) yield approaching;
+                                if (ratio < 0.6) yield sign ? approaching - 1 : approaching + 1;
+                                yield sign ? minimum : maximum;
+                            }
+                        },
+                        minimum,
+                        maximum);
+
+        // System.out.println(result);
+        // System.out.println();
+        return result;
+    }
+
+    private int generatePositive(double ratio) {
+        int anchor = Math.max(approaching, minimum);
+        int positiveRange = maximum - anchor;
+        return Math.round((float) ratio * positiveRange) + anchor;
+    }
+
+    private int generateNegative(double ratio) {
+        int anchor = Math.min(approaching, maximum);
+        int negativeRange = minimum - anchor;
+        return Math.round((float) ratio * negativeRange) + anchor;
     }
 }

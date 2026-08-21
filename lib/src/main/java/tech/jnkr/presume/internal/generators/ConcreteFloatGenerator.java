@@ -97,7 +97,7 @@ public class ConcreteFloatGenerator implements SimpleGenerator<Float>, FloatGene
                 switch (atom) {
                     case Trivial1() -> 0f;
                     case Trivial2() -> 1f;
-                    case Regular(float ratio, boolean sign, boolean simplify) ->
+                    case Regular(double ratio, boolean sign, boolean simplify) ->
                             this.generateFromRatio(ratio, sign, simplify);
                     case Edge(float ratio, boolean sign) -> {
                         if (ratio < 0.2f) yield sign ? 0f : -0f;
@@ -117,16 +117,16 @@ public class ConcreteFloatGenerator implements SimpleGenerator<Float>, FloatGene
         return result;
     }
 
-    private float generateFromRatio(float ratio, boolean sign, boolean simplify) {
+    private float generateFromRatio(double ratio, boolean sign, boolean simplify) {
         if (sign) {
             float anchor = Math.max(approaching, minimum);
             float positiveRange = maximum - anchor;
-            float value = (ratio * positiveRange) + anchor;
+            float value = (float) (ratio * positiveRange) + anchor;
             return simplify ? (float) Math.floor(value) : value;
         } else {
             float anchor = Math.min(approaching, maximum);
             float negativeRange = minimum - anchor;
-            float value = (ratio * negativeRange) + anchor;
+            float value = (float) (ratio * negativeRange) + anchor;
             return simplify ? (float) Math.floor(value) : value;
         }
     }

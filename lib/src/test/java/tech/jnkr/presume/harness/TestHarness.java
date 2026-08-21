@@ -1,4 +1,4 @@
-package tech.jnkr.presume;
+package tech.jnkr.presume.harness;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -7,13 +7,15 @@ import static tech.jnkr.presume.PropertyRunner.runProperty;
 
 import org.junit.jupiter.api.Test;
 
+import tech.jnkr.presume.ExampleGenerator;
+import tech.jnkr.presume.ExampleIntListGenerator;
+
 import java.util.ArrayList;
 import java.util.List;
 
 class TestHarness {
     @Test
     void assertThatAllBooleansAreTrue() {
-
         runProperty(
                 new ExampleGenerator(),
                 (bool) -> {
@@ -40,14 +42,18 @@ class TestHarness {
                 (list) -> {
                     if (!isOrdered(badSorter(list))) throw new RuntimeException("oh no");
                 },
-                1000);
+                10000);
     }
 
     private List<Integer> badSorter(List<Integer> list) {
         List<Integer> result = new ArrayList<>(list);
         result.sort(null);
 
-        if (list.size() > 3 && (list.get(0) % 2 == 0) && (list.get(2) % 2 == 1)) {
+        if (list.size() > 3
+                && (list.get(0) % 2 == 0)
+                && (list.get(2) % 2 == 1)
+                && (list.get(1) > 3)
+                && (list.get(1) % 3 == 0)) {
             result.sort(null);
             return result.reversed();
         }
@@ -66,5 +72,15 @@ class TestHarness {
         }
 
         return true;
+    }
+
+    @Test
+    public void assertThatBuggyEval1Works() {
+        runProperty(
+                new ExprGenerator(),
+                (expr) -> {
+                    assertEquals(ExprOperations.eval(expr), ExprOperations.buggyEval1(expr));
+                },
+                1000);
     }
 }

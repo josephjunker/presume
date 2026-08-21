@@ -89,7 +89,7 @@ public class ConcreteDoubleGenerator implements SimpleGenerator<Double>, DoubleG
                 switch (atom) {
                     case Trivial1() -> 0;
                     case Trivial2() -> 1;
-                    case Regular(float ratio, boolean sign, boolean simplify) ->
+                    case Regular(double ratio, boolean sign, boolean simplify) ->
                             this.generateFromRatio(ratio, sign, simplify);
                     case Edge(float ratio, boolean sign) -> {
                         if (ratio < 0.2f) yield sign ? 0f : -0f;
@@ -109,7 +109,7 @@ public class ConcreteDoubleGenerator implements SimpleGenerator<Double>, DoubleG
         return result;
     }
 
-    private double generateFromRatio(float ratio, boolean sign, boolean simplify) {
+    private double generateFromRatio(double ratio, boolean sign, boolean simplify) {
         if (sign) {
             double anchor = Math.max(approaching, minimum);
             double positiveRange = maximum - anchor;

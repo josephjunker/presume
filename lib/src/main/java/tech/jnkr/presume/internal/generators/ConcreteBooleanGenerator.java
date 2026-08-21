@@ -34,7 +34,7 @@ public class ConcreteBooleanGenerator implements SimpleGenerator<Boolean>, Boole
         return switch (atom) {
             case Trivial1() -> false;
             case Trivial2() -> false;
-            case Regular(float ratio, boolean sign, boolean simplify) -> ratio < 0.5;
+            case Regular(double ratio, boolean sign, boolean simplify) -> ratio < 0.5;
             default -> true;
         };
     }

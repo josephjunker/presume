@@ -56,8 +56,6 @@ public class PropertyRunner<T> {
             try {
                 // We have to re-run generation to get the detailed trace
                 replayedValue = replayingSource.call(generator);
-
-                System.out.println(replayedValue);
             } catch (Throwable e2) {
                 // Running generation twice should give us identical results, so if there's an
                 // exception while generating the data the second time it's due to a bad
@@ -110,7 +108,6 @@ public class PropertyRunner<T> {
 
                     try {
                         shrunk = source.call(generator);
-                        System.out.println(shrunk);
                     } catch (SourceDepletedException sourceDepletedException) {
                         // We ran out of atoms and failed to generate input
                         return Maybe.empty();

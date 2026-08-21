@@ -1,11 +1,19 @@
 package tech.jnkr.presume.generators;
 
 import tech.jnkr.presume.AbstractGenerator;
+import tech.jnkr.presume.exceptions.InvalidGeneratorException;
+
+import java.util.List;
 
 public interface GenerationSource {
     boolean getBoolean();
 
     BooleanGenerator booleanGen();
+
+    default boolean getWeightedBoolean(float trueRatio) {
+        int draw = getInteger(0, 1000);
+        return draw <= trueRatio * 1000f;
+    }
 
     int getInteger();
 
@@ -66,4 +74,16 @@ public interface GenerationSource {
     DoubleGenerator doubleGen();
 
     <T> T call(AbstractGenerator<T> generator);
+
+    default <T> T oneOf(List<AbstractGenerator<T>> generators) {
+        if (generators.isEmpty())
+            throw new InvalidGeneratorException(
+                    "Tried to call oneOf without providing any generators");
+
+        int index = getInteger(0, generators.size() - 1);
+
+        // System.out.println(index);
+
+        return call(generators.get(index));
+    }
 }

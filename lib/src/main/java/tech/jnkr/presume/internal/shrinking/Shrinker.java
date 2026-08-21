@@ -56,12 +56,10 @@ public class Shrinker<T> {
                             .findFirst();
 
             if (optionalShrunk.isEmpty()) {
-                System.out.println("empty");
                 // We failed to reduce the test case by shrinking the current atom.
                 // Move on to attempt the next atom.
                 index++;
             } else {
-                System.out.println("reduced");
                 // `unwrapUnsafe` is safe because of the `filter` above.
                 currentFailure = optionalShrunk.get().unwrapUnsafe();
                 index++;
@@ -107,7 +105,7 @@ public class Shrinker<T> {
         return switch (atom) {
             case Trivial1() -> Stream.of();
             case Trivial2() -> Stream.of(new Trivial1());
-            case Regular(float ratio, boolean sign, boolean simplify) -> {
+            case Regular(double ratio, boolean sign, boolean simplify) -> {
                 Stream<DrawAtom> trivials = Stream.of(new Trivial1(), new Trivial2());
                 Stream<DrawAtom> flags = simplifyFlags(ratio, sign, simplify);
                 Stream<Float> reductionSchedule =
@@ -151,7 +149,7 @@ public class Shrinker<T> {
         };
     }
 
-    private Stream<DrawAtom> simplifyFlags(float ratio, boolean sign, boolean simplify) {
+    private Stream<DrawAtom> simplifyFlags(double ratio, boolean sign, boolean simplify) {
         if (sign && simplify) return Stream.of();
         if (!sign && !simplify)
             return Stream.of(
