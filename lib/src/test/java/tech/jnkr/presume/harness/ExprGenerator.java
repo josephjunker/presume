@@ -12,7 +12,7 @@ public class ExprGenerator extends AbstractGenerator<Expr> {
 
         if (shouldTerminate) return source.call(new LitGenerator());
 
-        return source.oneOf(List.of(new AddGenerator(), new MulGenerator(), new NegGenerator()));
+        return source.oneOfLeftBiased(List.of(new AddGenerator(), new MulGenerator(), new NegGenerator()));
     }
 
     static class LitGenerator extends AbstractGenerator<Expr> {

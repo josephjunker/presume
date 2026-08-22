@@ -75,7 +75,7 @@ public interface GenerationSource {
 
     <T> T call(AbstractGenerator<T> generator);
 
-    default <T> T oneOf(List<AbstractGenerator<T>> generators) {
+    default <T> T oneOfLeftBiased(List<AbstractGenerator<T>> generators) {
         if (generators.isEmpty())
             throw new InvalidGeneratorException(
                     "Tried to call oneOf without providing any generators");
