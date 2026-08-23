@@ -105,9 +105,9 @@ public class Shrinker<T> {
         return switch (atom) {
             case Trivial1() -> Stream.of();
             case Trivial2() -> Stream.of(new Trivial1());
-            case Regular(double ratio, boolean sign, boolean simplify) -> {
+            case Regular(int magnitude, boolean sign, boolean simplify) -> {
                 Stream<DrawAtom> trivials = Stream.of(new Trivial1(), new Trivial2());
-                Stream<DrawAtom> flags = simplifyFlags(ratio, sign, simplify);
+                Stream<DrawAtom> flags = simplifyFlags(magnitude, sign, simplify);
                 Stream<Float> reductionSchedule =
                         Stream.of(
                                 1000f, 500f, 100f, 20f, 10f, 2f, 1.5f, 1.4f, 1.25f, 1.1f, 1.05f,
@@ -118,23 +118,32 @@ public class Shrinker<T> {
                                 reductionRatio ->
                                         Stream.concat(
                                                 simplifyFlags(
-                                                        ratio / reductionRatio, sign, simplify),
+                                                        (int) ((float) magnitude / reductionRatio),
+                                                        sign,
+                                                        simplify),
                                                 Stream.of(
                                                         new Regular(
-                                                                ratio / reductionRatio,
+                                                                (int)
+                                                                        ((float) magnitude
+                                                                                / reductionRatio),
                                                                 sign,
                                                                 simplify))));
 
                 yield Stream.concat(Stream.concat(trivials, flags), reduced);
             }
-            case Edge(float ratio, boolean sign) -> {
-                // Any "regular" is "smaller" than an "Edge" from the shrinker's
+            case Edge(int magnitude, boolean sign) -> {
+                // Any `Regular` is "smaller" than an `Edge` from the shrinker's
                 // perspective, so increasing the ratio here doesn't break our guarantees
-                Stream<Float> regularShrinkRatios =
-                        Stream.iterate(0f, value -> value < 1f, value -> value + 0.01f);
+                Stream<Integer> regularShrinkMagnitudes =
+                        Stream.iterate(
+                                1,
+                                // The choice of these values is arbitrary and not
+                                // thoroughly-considered
+                                value -> value < 100000,
+                                value -> (int) ((float) value * 1.5) + 3);
 
                 Stream<DrawAtom> regularShrinks =
-                        regularShrinkRatios.flatMap(
+                        regularShrinkMagnitudes.flatMap(
                                 syntheticRatio ->
                                         Stream.concat(
                                                 simplifyFlags(syntheticRatio, false, false),
@@ -144,21 +153,22 @@ public class Shrinker<T> {
 
                 yield Stream.concat(
                         Stream.concat(Stream.of(new Trivial1(), new Trivial2()), regularShrinks),
-                        simplifyFlags(ratio, false, false));
+                        simplifyFlags(magnitude, false, false));
             }
         };
     }
 
-    private Stream<DrawAtom> simplifyFlags(double ratio, boolean sign, boolean simplify) {
+    private Stream<DrawAtom> simplifyFlags(int magnitude, boolean sign, boolean simplify) {
         if (sign && simplify) return Stream.of();
         if (!sign && !simplify)
             return Stream.of(
-                    new Regular(ratio, true, true),
-                    new Regular(ratio, true, false),
-                    new Regular(ratio, false, true));
+                    new Regular(magnitude, true, true),
+                    new Regular(magnitude, true, false),
+                    new Regular(magnitude, false, true));
         if (!sign)
-            return Stream.of(new Regular(ratio, true, true), new Regular(ratio, true, false));
+            return Stream.of(
+                    new Regular(magnitude, true, true), new Regular(magnitude, true, false));
 
-        return Stream.of(new Regular(ratio, true, true), new Regular(ratio, false, true));
+        return Stream.of(new Regular(magnitude, true, true), new Regular(magnitude, false, true));
     }
 }
