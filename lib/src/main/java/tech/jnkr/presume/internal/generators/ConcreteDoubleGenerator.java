@@ -4,7 +4,6 @@ import tech.jnkr.presume.exceptions.InvalidGeneratorException;
 import tech.jnkr.presume.generators.DoubleGenerator;
 import tech.jnkr.presume.internal.atoms.*;
 
-import java.nio.ByteBuffer;
 import java.util.function.Supplier;
 
 public class ConcreteDoubleGenerator implements SimpleGenerator<Double>, DoubleGenerator {
@@ -146,7 +145,11 @@ public class ConcreteDoubleGenerator implements SimpleGenerator<Double>, DoubleG
         int prefix = atomToInt(atom2);
         int suffix = atomToInt(atom3);
 
-        long unscaled = ByteBuffer.allocate(8).putInt(prefix).putInt(suffix).getLong();
+        long unscaled = prefix;
+        unscaled = unscaled << 32;
+        unscaled = unscaled & suffix;
+
+        // long unscaled = ByteBuffer.allocate(8).putInt(prefix).putInt(suffix).getLong();
 
         return (long) (((double) unscaled) * mantissaMaxLongRatio);
     }

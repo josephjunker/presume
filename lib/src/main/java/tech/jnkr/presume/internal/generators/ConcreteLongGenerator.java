@@ -4,7 +4,6 @@ import tech.jnkr.presume.exceptions.InvalidGeneratorException;
 import tech.jnkr.presume.generators.LongGenerator;
 import tech.jnkr.presume.internal.atoms.*;
 
-import java.nio.ByteBuffer;
 import java.util.function.Supplier;
 
 public class ConcreteLongGenerator implements SimpleGenerator<Long>, LongGenerator {
@@ -70,11 +69,17 @@ public class ConcreteLongGenerator implements SimpleGenerator<Long>, LongGenerat
                                                 int secondMagnitude,
                                                 boolean secondSign,
                                                 boolean secondSimplify) -> {
+                                    /*
                                     long unscaled =
                                             ByteBuffer.allocate(8)
                                                     .putInt(magnitude)
                                                     .putInt(secondMagnitude)
                                                     .getLong();
+                                     */
+
+                                    long unscaled = magnitude;
+                                    unscaled = unscaled << 32;
+                                    unscaled = unscaled & secondMagnitude;
 
                                     double range = maximum - minimum;
                                     double ratio = range / Long.MAX_VALUE;
