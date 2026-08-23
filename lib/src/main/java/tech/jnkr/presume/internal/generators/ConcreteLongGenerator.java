@@ -65,19 +65,21 @@ public class ConcreteLongGenerator implements SimpleGenerator<Long>, LongGenerat
                     case Trivial2() -> 1;
                     case Regular(int magnitude, boolean sign, boolean simplify) ->
                             switch (atom2) {
-                                case Trivial1() -> sign ? magnitude : -magnitude;
-                                case Trivial2() -> sign ? magnitude : -magnitude;
+                                case Trivial1(), Trivial2() -> sign ? magnitude : -magnitude;
                                 case Regular(
                                                 int secondMagnitude,
                                                 boolean secondSign,
                                                 boolean secondSimplify) -> {
-                                    long result =
+                                    long unscaled =
                                             ByteBuffer.allocate(8)
                                                     .putInt(magnitude)
                                                     .putInt(secondMagnitude)
                                                     .getLong();
 
-                                    // TODO: scale to be between maximum and minimum
+                                    double range = maximum - minimum;
+                                    double ratio = range / Long.MAX_VALUE;
+                                    long result = (long) ((double) unscaled * ratio);
+
                                     yield sign ? result : -result;
                                 }
                                 case Edge(int secondMagnitude, boolean secondSign) ->
