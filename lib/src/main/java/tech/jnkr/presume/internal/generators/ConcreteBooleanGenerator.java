@@ -11,6 +11,7 @@ import java.util.function.Supplier;
 public class ConcreteBooleanGenerator implements SimpleGenerator<Boolean>, BooleanGenerator {
     private final Supplier<DrawAtom> atomSupplier;
     private final boolean shrinkTowards;
+    private static int cutoff = Integer.MAX_VALUE / 2;
 
     public ConcreteBooleanGenerator(Supplier<DrawAtom> atomSupplier) {
         this.atomSupplier = atomSupplier;
@@ -34,7 +35,7 @@ public class ConcreteBooleanGenerator implements SimpleGenerator<Boolean>, Boole
         return switch (atom) {
             case Trivial1() -> false;
             case Trivial2() -> false;
-            case Regular(double ratio, boolean sign, boolean simplify) -> ratio < 0.5;
+            case Regular(int magnitude, boolean sign, boolean simplify) -> magnitude > cutoff;
             default -> true;
         };
     }

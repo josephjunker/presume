@@ -14,6 +14,16 @@ public class ConcreteFloatGenerator implements SimpleGenerator<Float>, FloatGene
     private final boolean allowInfinity;
     private final Supplier<DrawAtom> atomSupplier;
 
+    private static final int oneFifthMaxInt = Integer.MAX_VALUE / 5;
+    private static final int twoFifthsMaxInt = oneFifthMaxInt * 2;
+    private static final int threeFifthsMaxInt = oneFifthMaxInt * 3;
+    private static final int fourFifthsMaxInt = oneFifthMaxInt * 4;
+
+    private static final int mantissaRange = 2 ^ 23;
+    private static final float mantissaMaxIntRatio = (float) mantissaRange / Integer.MAX_VALUE;
+    private static final int exponentRange = 2 ^ 8;
+    private static final float exponentMaxIntRatio = (float) exponentRange / Integer.MAX_VALUE;
+
     public ConcreteFloatGenerator(Supplier<DrawAtom> atomSupplier) {
         this.atomSupplier = atomSupplier;
         minimum = -Float.MAX_VALUE / 2f;
@@ -82,10 +92,10 @@ public class ConcreteFloatGenerator implements SimpleGenerator<Float>, FloatGene
 
     @Override
     public Float gen() {
-        return produce(atomSupplier.get());
+        return produce(atomSupplier.get(), atomSupplier.get());
     }
 
-    private Float produce(DrawAtom atom) {
+    private Float produce(DrawAtom atom1, DrawAtom atom2) {
         if (minimum > maximum)
             throw new InvalidGeneratorException(
                     String.format(
@@ -94,40 +104,85 @@ public class ConcreteFloatGenerator implements SimpleGenerator<Float>, FloatGene
                             minimum, maximum));
 
         float result =
-                switch (atom) {
+                switch (atom1) {
                     case Trivial1() -> 0f;
                     case Trivial2() -> 1f;
-                    case Regular(double ratio, boolean sign, boolean simplify) ->
-                            this.generateFromRatio(ratio, sign, simplify);
-                    case Edge(float ratio, boolean sign) -> {
-                        if (ratio < 0.2f) yield sign ? 0f : -0f;
-                        if (ratio < 0.4f) yield sign ? Float.MIN_VALUE : -Float.MIN_VALUE;
-                        if (ratio < 0.6f) yield sign ? approaching + 1 : approaching - 1;
-                        if (ratio < 0.8f) {
-                            if (!allowInfinity) yield this.generateFromRatio(ratio, sign, false);
+                    case Regular(int magnitude, boolean sign, boolean simplify) ->
+                            generateFromSecondAtom(magnitude, atom2, sign, simplify);
+                    case Edge(int magnitude, boolean sign) -> {
+                        if (magnitude < oneFifthMaxInt) yield sign ? 0f : -0f;
+                        if (magnitude < twoFifthsMaxInt)
+                            yield sign ? Float.MIN_VALUE : -Float.MIN_VALUE;
+                        if (magnitude < threeFifthsMaxInt)
+                            yield sign ? Float.MAX_VALUE : -Float.MAX_VALUE;
+                        if (magnitude < fourFifthsMaxInt) {
+                            if (!allowInfinity)
+                                yield generateFromSecondAtom(magnitude, atom2, sign, false);
                             yield sign ? Float.POSITIVE_INFINITY : Float.NEGATIVE_INFINITY;
                         }
                         if (allowNaN) yield Float.NaN;
-                        if (allowInfinity) yield Float.POSITIVE_INFINITY;
-                        yield generateFromRatio(ratio, sign, false);
+                        if (allowInfinity)
+                            yield sign ? Float.POSITIVE_INFINITY : Float.NEGATIVE_INFINITY;
+                        yield generateFromSecondAtom(magnitude, atom2, sign, false);
                     }
                 };
         if (result < minimum) return minimum;
-        if (result > maximum) return maximum;
-        return result;
+        return Math.min(result, maximum);
     }
 
-    private float generateFromRatio(double ratio, boolean sign, boolean simplify) {
-        if (sign) {
-            float anchor = Math.max(approaching, minimum);
-            float positiveRange = maximum - anchor;
-            float value = (float) (ratio * positiveRange) + anchor;
-            return simplify ? (float) Math.floor(value) : value;
-        } else {
-            float anchor = Math.min(approaching, maximum);
-            float negativeRange = minimum - anchor;
-            float value = (float) (ratio * negativeRange) + anchor;
-            return simplify ? (float) Math.floor(value) : value;
-        }
+    private int magnitudeToMantissa(int magnitude) {
+        return (int) ((float) magnitude * mantissaMaxIntRatio);
+    }
+
+    private int magnitudeToExponent(int magnitude) {
+        return ((int) ((float) magnitude * exponentMaxIntRatio)) + 127;
+    }
+
+    private int signToInt(boolean sign) {
+        return sign ? 1 : 0;
+    }
+
+    private float generateFromSecondAtom(
+            int firstMagnitude, DrawAtom secondAtom, boolean sign, boolean simplify) {
+        return switch (secondAtom) {
+            case Trivial1() -> 0f;
+            case Trivial2() -> 1f;
+            case Regular(int secondMagnitude, boolean secondSign, boolean secondSimplify) ->
+                    generateFromMagnitudes(firstMagnitude, secondMagnitude, sign, simplify);
+            case Edge(int secondMagnitude, boolean sign1) -> {
+                if (secondMagnitude < oneFifthMaxInt) yield sign ? 0f : -0f;
+                if (secondMagnitude < twoFifthsMaxInt)
+                    yield sign ? Float.MIN_VALUE : -Float.MIN_VALUE;
+                if (secondMagnitude < threeFifthsMaxInt)
+                    yield sign ? approaching + 1 : approaching - 1;
+                if (secondMagnitude < fourFifthsMaxInt) {
+                    if (!allowInfinity)
+                        yield this.generateFromMagnitudes(
+                                firstMagnitude, secondMagnitude, sign, false);
+                    yield sign ? Float.POSITIVE_INFINITY : Float.NEGATIVE_INFINITY;
+                }
+                if (allowNaN) yield Float.NaN;
+                if (allowInfinity) yield Float.POSITIVE_INFINITY;
+                yield generateFromMagnitudes(firstMagnitude, secondMagnitude, sign, false);
+            }
+        };
+    }
+
+    private float generateFromMagnitudes(
+            int magnitude1, int magnitude2, boolean sign, boolean simplify) {
+        boolean effectiveSign = (minimum >= 0) || sign;
+        if (maximum <= 0) effectiveSign = false;
+
+        int signInt = signToInt(effectiveSign);
+        int exponentInt = magnitudeToExponent(magnitude1);
+        int mantissaInt = magnitudeToMantissa(magnitude2);
+
+        int bits = signInt << 31;
+        bits |= exponentInt << 23;
+        bits |= mantissaInt;
+
+        float result = Float.intBitsToFloat(bits);
+        if (simplify) return (float) (int) result;
+        return result;
     }
 }

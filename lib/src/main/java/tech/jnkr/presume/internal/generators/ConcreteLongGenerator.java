@@ -4,6 +4,7 @@ import tech.jnkr.presume.exceptions.InvalidGeneratorException;
 import tech.jnkr.presume.generators.LongGenerator;
 import tech.jnkr.presume.internal.atoms.*;
 
+import java.nio.ByteBuffer;
 import java.util.function.Supplier;
 
 public class ConcreteLongGenerator implements SimpleGenerator<Long>, LongGenerator {
@@ -12,10 +13,13 @@ public class ConcreteLongGenerator implements SimpleGenerator<Long>, LongGenerat
     private final long approaching;
     private final Supplier<DrawAtom> atomSupplier;
 
+    private static final int oneThirdMaxInt = Integer.MAX_VALUE / 3;
+    private static final int twoThirdsMaxInt = oneThirdMaxInt * 2;
+
     public ConcreteLongGenerator(Supplier<DrawAtom> atomSupplier) {
         this.atomSupplier = atomSupplier;
-        minimum = (long) Math.floor(Long.MIN_VALUE / 2f);
-        maximum = (long) Math.floor(Long.MAX_VALUE / 2f);
+        minimum = Long.MIN_VALUE;
+        maximum = Long.MAX_VALUE;
         approaching = 0;
     }
 
@@ -44,10 +48,10 @@ public class ConcreteLongGenerator implements SimpleGenerator<Long>, LongGenerat
 
     @Override
     public Long gen() {
-        return produce(atomSupplier.get());
+        return produce(atomSupplier.get(), atomSupplier.get());
     }
 
-    private Long produce(DrawAtom atom) {
+    private Long produce(DrawAtom atom1, DrawAtom atom2) {
         if (minimum > maximum)
             throw new InvalidGeneratorException(
                     String.format(
@@ -56,23 +60,33 @@ public class ConcreteLongGenerator implements SimpleGenerator<Long>, LongGenerat
                             minimum, maximum));
 
         return Math.clamp(
-                switch (atom) {
+                switch (atom1) {
                     case Trivial1() -> 0;
                     case Trivial2() -> 1;
-                    case Regular(double ratio, boolean sign, boolean simplify) -> {
-                        if (sign) {
-                            long anchor = Math.max(approaching, minimum);
-                            long positiveRange = maximum - anchor;
-                            yield (long) (ratio * positiveRange) + anchor;
-                        } else {
-                            long anchor = Math.min(approaching, maximum);
-                            long negativeRange = minimum - anchor;
-                            yield (long) (ratio * negativeRange) + anchor;
-                        }
-                    }
-                    case Edge(float ratio, boolean sign) -> {
-                        if (ratio < 0.3) yield approaching;
-                        if (ratio < 0.6) yield sign ? approaching - 1 : approaching + 1;
+                    case Regular(int magnitude, boolean sign, boolean simplify) ->
+                            switch (atom2) {
+                                case Trivial1() -> sign ? magnitude : -magnitude;
+                                case Trivial2() -> sign ? magnitude : -magnitude;
+                                case Regular(
+                                                int secondMagnitude,
+                                                boolean secondSign,
+                                                boolean secondSimplify) -> {
+                                    long result =
+                                            ByteBuffer.allocate(8)
+                                                    .putInt(magnitude)
+                                                    .putInt(secondMagnitude)
+                                                    .getLong();
+
+                                    // TODO: scale to be between maximum and minimum
+                                    yield sign ? result : -result;
+                                }
+                                case Edge(int secondMagnitude, boolean secondSign) ->
+                                        sign ? magnitude : -magnitude;
+                            };
+                    case Edge(int magnitude, boolean sign) -> {
+                        if (magnitude < oneThirdMaxInt) yield approaching;
+                        if (magnitude > twoThirdsMaxInt)
+                            yield sign ? approaching - 1 : approaching + 1;
                         yield sign ? minimum : maximum;
                     }
                 },
