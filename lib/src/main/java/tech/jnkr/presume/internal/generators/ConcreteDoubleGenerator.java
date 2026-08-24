@@ -149,8 +149,6 @@ public class ConcreteDoubleGenerator implements SimpleGenerator<Double>, DoubleG
         unscaled = unscaled << 32;
         unscaled = unscaled & suffix;
 
-        // long unscaled = ByteBuffer.allocate(8).putInt(prefix).putInt(suffix).getLong();
-
         return (long) (((double) unscaled) * mantissaMaxLongRatio);
     }
 
@@ -158,8 +156,8 @@ public class ConcreteDoubleGenerator implements SimpleGenerator<Double>, DoubleG
         return switch (atom) {
             case Trivial1() -> 0;
             case Trivial2() -> 1;
-            case Regular(int magnitude, boolean sign, boolean simplify) -> magnitude;
-            case Edge(int magnitude, boolean sign) -> Integer.MAX_VALUE;
+            case Regular(int magnitude, _, _) -> magnitude;
+            case Edge(_, _) -> Integer.MAX_VALUE;
         };
     }
 }

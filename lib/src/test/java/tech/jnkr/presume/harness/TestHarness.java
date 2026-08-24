@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import static tech.jnkr.presume.PropertyRunner.runProperty;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import tech.jnkr.presume.ExampleGenerator;
@@ -14,7 +13,6 @@ import tech.jnkr.presume.ExampleIntListGenerator;
 import java.util.ArrayList;
 import java.util.List;
 
-@Disabled
 class TestHarness {
     @Test
     void assertThatAllBooleansAreTrue() {

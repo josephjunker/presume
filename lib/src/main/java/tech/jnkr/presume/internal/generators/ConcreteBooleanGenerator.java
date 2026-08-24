@@ -33,9 +33,8 @@ public class ConcreteBooleanGenerator implements SimpleGenerator<Boolean>, Boole
 
     private Boolean produce(DrawAtom atom) {
         return switch (atom) {
-            case Trivial1() -> false;
-            case Trivial2() -> false;
-            case Regular(int magnitude, boolean sign, boolean simplify) -> magnitude > cutoff;
+            case Trivial1(), Trivial2() -> false;
+            case Regular(int magnitude, _, _) -> magnitude > cutoff;
             default -> true;
         };
     }

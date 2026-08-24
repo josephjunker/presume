@@ -8,9 +8,9 @@ import java.util.List;
 public class ExprGenerator extends AbstractGenerator<Expr> {
     @Override
     protected Expr gen(GenerationSource source) {
-        boolean shouldTerminate = source.getWeightedBoolean(0.55f);
+        boolean shouldRecurse = source.getWeightedBoolean(0.45f);
 
-        if (shouldTerminate) return source.call(new LitGenerator());
+        if (!shouldRecurse) return source.call(new LitGenerator());
 
         return source.oneOfLeftBiased(
                 List.of(new AddGenerator(), new MulGenerator(), new NegGenerator()));

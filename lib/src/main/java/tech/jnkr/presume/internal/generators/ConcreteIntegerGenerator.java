@@ -60,17 +60,16 @@ public class ConcreteIntegerGenerator
 
         return Math.clamp(
                 switch (atom) {
-                    case Trivial1() -> approaching;
-                    case Trivial2() -> approaching;
+                    case Trivial1(), Trivial2() -> approaching;
                     case Regular(int magnitude, boolean sign, boolean simplify) -> {
                         if (minimum >= 0) {
-                            yield magnitude;
+                            yield minimum + scale(magnitude);
                         } else if (maximum <= 0) {
-                            yield magnitude * -1;
+                            yield maximum - scale(magnitude);
                         } else if (sign) {
-                            yield magnitude;
+                            yield scale(magnitude);
                         } else {
-                            yield magnitude * -1;
+                            yield -scale(magnitude);
                         }
                     }
                     case Edge(int magnitude, boolean sign) -> {
@@ -82,5 +81,11 @@ public class ConcreteIntegerGenerator
                 },
                 minimum,
                 maximum);
+    }
+
+    private int scale(int magnitude) {
+        int range = maximum - minimum;
+        double ratio = (double) range / Integer.MAX_VALUE;
+        return (int) (magnitude * ratio);
     }
 }
