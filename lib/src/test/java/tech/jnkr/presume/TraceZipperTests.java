@@ -123,7 +123,26 @@ public class TraceZipperTests {
         assertFocusValue(zipper, traceStructure.firstSub.first);
         assertFocusValue(zipper.chaseToAtomIndex(1), traceStructure.firstSub.second);
         assertFocusValue(zipper.chaseToAtomIndex(2), traceStructure.first);
-        // TODO: finish this test
+        assertFocusValue(zipper.chaseToAtomIndex(3), traceStructure.secondSub.first);
+        assertFocusValue(zipper.chaseToAtomIndex(4), traceStructure.secondSub.second);
+        assertFocusValue(zipper.chaseToAtomIndex(5), traceStructure.secondSub.firstSub.first);
+        assertFocusValue(zipper.chaseToAtomIndex(6), traceStructure.secondSub.firstSub.second);
+        assertFocusValue(zipper.chaseToAtomIndex(7), traceStructure.secondSub.third);
+        assertFocusValue(zipper.chaseToAtomIndex(8), traceStructure.secondSub.secondSub.first);
+        assertFocusValue(zipper.chaseToAtomIndex(9), traceStructure.secondSub.secondSub.second);
+
+        assertFocusValue(zipper.chaseToAtomIndex(10), traceStructure.thirdSub.first);
+        assertFocusValue(zipper.chaseToAtomIndex(11), traceStructure.thirdSub.second);
+        assertFocusValue(zipper.chaseToAtomIndex(12), traceStructure.thirdSub.firstSub.first);
+        assertFocusValue(zipper.chaseToAtomIndex(13), traceStructure.thirdSub.firstSub.second);
+        assertFocusValue(zipper.chaseToAtomIndex(14), traceStructure.thirdSub.third);
+        assertFocusValue(zipper.chaseToAtomIndex(15), traceStructure.thirdSub.secondSub.first);
+        assertFocusValue(zipper.chaseToAtomIndex(16), traceStructure.thirdSub.secondSub.second);
+
+        assertFocusValue(zipper.chaseToAtomIndex(17), traceStructure.second);
+        assertFocusValue(zipper.chaseToAtomIndex(18), traceStructure.third);
+
+        assertEquals(zipper.chaseToAtomIndex(19), Maybe.empty());
     }
 
     public void assertFocusValue(TraceZipper zipper, int value) {

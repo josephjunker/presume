@@ -22,13 +22,13 @@ public class SourceAndTraceTests {
         protected ImmutableList<Object> gen(@NonNull GenerationSource drawer) {
             ImmutableList<Object> result = ImmutableList.empty();
 
-            result = result.push(drawer.getLong());
-            result = result.push(drawer.getFloat());
-            result = result.push(drawer.call(new SampleGenerator2()));
-            result = result.push(drawer.getBoolean());
-            result = result.push(drawer.call(new SampleGenerator2()));
-            result = result.push(drawer.call(new SampleGenerator3()));
-            result = result.push(drawer.getDouble());
+            result = result.push(drawer.getLong()); // 2 atoms
+            result = result.push(drawer.getFloat()); // 2 atoms
+            result = result.push(drawer.call(new SampleGenerator2())); // 1 atom
+            result = result.push(drawer.getBoolean()); // 1 atom
+            result = result.push(drawer.call(new SampleGenerator2())); // 1 atom
+            result = result.push(drawer.call(new SampleGenerator3())); // 4 atoms
+            result = result.push(drawer.getDouble()); // 3 atoms
 
             result = result.push(drawer.call(new SampleGenerator5()));
 
@@ -36,29 +36,31 @@ public class SourceAndTraceTests {
         }
     }
 
+    // 1 atom
     public static class SampleGenerator2 extends AbstractGenerator<ImmutableList<Object>> {
 
         @Override
         protected ImmutableList<Object> gen(@NonNull GenerationSource drawer) {
             ImmutableList<Object> result = ImmutableList.empty();
 
-            result = result.push(drawer.call(new SampleGenerator4()));
-            result = result.push(drawer.getInteger());
+            result = result.push(drawer.call(new SampleGenerator4())); // 0 atoms
+            result = result.push(drawer.getInteger()); // 1 atom
 
             return result;
         }
     }
 
+    // 4 atoms
     public static class SampleGenerator3 extends AbstractGenerator<ImmutableList<Object>> {
 
         @Override
         protected ImmutableList<Object> gen(@NonNull GenerationSource drawer) {
             ImmutableList<Object> result = ImmutableList.empty();
 
-            result = result.push(drawer.call(new SampleGenerator2()));
-            result = result.push(drawer.call(new SampleGenerator2()));
-            result = result.push(drawer.call(new SampleGenerator4()));
-            result = result.push(drawer.getFloat());
+            result = result.push(drawer.call(new SampleGenerator2())); // 1 atom
+            result = result.push(drawer.call(new SampleGenerator2())); // 1 atom
+            result = result.push(drawer.call(new SampleGenerator4())); // 0 atoms
+            result = result.push(drawer.getFloat()); // 2 atoms
 
             return result;
         }
@@ -161,7 +163,9 @@ public class SourceAndTraceTests {
         for (int i = 0; i < 200; i++) {
             Maybe<Trace> navigated = trace.toZipper().chaseToAtomIndex(i).map(TraceZipper::toTrace);
 
-            if (i < 20) assertTrue(navigated.isJust());
+            if (i <= 14) { // minimum number of atoms consumed by generator
+                assertTrue(navigated.isJust());
+            }
 
             switch (navigated) {
                 case Nothing() -> {}
