@@ -85,6 +85,6 @@ public class ConcreteIntegerGenerator
 
     private int scale(int magnitude, int range) {
         double ratio = (double) range / Integer.MAX_VALUE;
-        return (int) (magnitude * ratio);
+        return Math.round((float) (magnitude * ratio));
     }
 }
