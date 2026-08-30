@@ -65,30 +65,22 @@ public class ConcreteLongGenerator implements SimpleGenerator<Long>, LongGenerat
                     case Regular(int magnitude, boolean sign, boolean simplify) ->
                             switch (atom2) {
                                 case Trivial1(), Trivial2() -> sign ? magnitude : -magnitude;
-                                case Regular(
-                                                int secondMagnitude,
-                                                boolean secondSign,
-                                                boolean secondSimplify) -> {
-                                    /*
-                                    long unscaled =
-                                            ByteBuffer.allocate(8)
-                                                    .putInt(magnitude)
-                                                    .putInt(secondMagnitude)
-                                                    .getLong();
-                                     */
-
+                                case Regular(int secondMagnitude, _, _) -> {
                                     long unscaled = magnitude;
-                                    unscaled = unscaled << 32;
-                                    unscaled = unscaled & secondMagnitude;
+                                    unscaled = unscaled << 31;
+                                    unscaled = unscaled | secondMagnitude;
+
+                                    // TODO: this logic is wrong, I'm not accounting for the sign
+                                    // bit. Also this should scale positive and negative ranges
+                                    // independently, like the integer generator does.
 
                                     double range = maximum - minimum;
                                     double ratio = range / Long.MAX_VALUE;
-                                    long result = (long) ((double) unscaled * ratio);
+                                    long result = (long) ((double) unscaled * ratio) + minimum;
 
-                                    yield sign ? result : -result;
+                                    yield sign ? Math.abs(result) : -Math.abs(result);
                                 }
-                                case Edge(int secondMagnitude, boolean secondSign) ->
-                                        sign ? magnitude : -magnitude;
+                                case Edge(_, _) -> sign ? magnitude : -magnitude;
                             };
                     case Edge(int magnitude, boolean sign) -> {
                         if (magnitude < oneThirdMaxInt) yield approaching;
