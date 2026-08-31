@@ -31,7 +31,7 @@ public class TraceZipper {
         return newInner.isJust()
                 ? new Just<>(
                         new TraceZipper(
-                                composedZipper.replace(new Tuple<>(inner.first(), newInner))))
+                                composedZipper.replaceFocus(new Tuple<>(inner.first(), newInner))))
                 : new Nothing<>();
     }
 
@@ -58,7 +58,7 @@ public class TraceZipper {
                     case Just(var newRight) ->
                             Maybe.of(
                                     new TraceZipper(
-                                            treeZipper.replace(
+                                            treeZipper.replaceFocus(
                                                     new Tuple<>(
                                                             newChildIndex, Maybe.of(newRight)))));
                 };

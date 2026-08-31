@@ -37,6 +37,20 @@ public class RoseTree<T> {
         return RoseTreeZipper.fromTree(this);
     }
 
+    public ImmutableList<RoseTree<T>> getSubtrees(int depth) {
+        return getSubtreesRecursive(depth, this, ImmutableList.empty());
+    }
+
+    private static <T> ImmutableList<RoseTree<T>> getSubtreesRecursive(
+            int depth, RoseTree<T> current, ImmutableList<RoseTree<T>> accumulator) {
+        if (depth == 0) return accumulator;
+
+        accumulator = current.children.concat(accumulator);
+
+        return current.children.foldLeft(
+                (acc, childTree) -> getSubtreesRecursive(depth - 1, childTree, acc), accumulator);
+    }
+
     @Override
     public boolean equals(Object other) {
         // TODO replace this with safeEquals below once I can test it

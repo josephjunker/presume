@@ -63,6 +63,10 @@ public class RoseTreeZipper<T> {
         return maybeZipper;
     }
 
+    public Maybe<RoseTree<T>> nthChildTree(int index) {
+        return focus.children.getAt(index);
+    }
+
     public Maybe<RoseTreeZipper<T>> up() {
         return switch (parents) {
             case Nil():
@@ -105,9 +109,21 @@ public class RoseTreeZipper<T> {
                 rightSiblings);
     }
 
-    public RoseTreeZipper<T> replace(T newValue) {
+    public RoseTreeZipper<T> replaceFocus(T newValue) {
         return new RoseTreeZipper<>(
                 parents, leftSiblings, new RoseTree<>(newValue, focus.children), rightSiblings);
+    }
+
+    public RoseTreeZipper<T> replaceCurrentSubtree(RoseTree<T> newSubtree) {
+        return new RoseTreeZipper<>(parents, leftSiblings, newSubtree, rightSiblings);
+    }
+
+    public int childCount() {
+        return focus.children.size();
+    }
+
+    public boolean isRoot() {
+        return parents instanceof Cons;
     }
 
     public RoseTree<T> toTree() {
@@ -120,6 +136,44 @@ public class RoseTreeZipper<T> {
         }
 
         return last.focus;
+    }
+
+    public ImmutableList<Integer> getPath() {
+        Maybe<RoseTreeZipper<T>> current = Maybe.of(this);
+        ImmutableList<Integer> path = ImmutableList.empty();
+
+        while (true) {
+            switch (current) {
+                case Nothing():
+                    return path;
+                case Just(var zipper):
+                    {
+                        path = path.push(zipper.leftSiblings.size());
+                        current = zipper.up();
+                    }
+            }
+        }
+    }
+
+    public Maybe<RoseTreeZipper<T>> followPath(ImmutableList<Integer> path) {
+        Maybe<RoseTreeZipper<T>> result = Maybe.of(this);
+        ImmutableList<Integer> currentPath = path;
+
+        while (true) {
+            switch (currentPath) {
+                case Nil():
+                    return result;
+                case Cons(Integer i, var tail):
+                    {
+                        result = result.chain(zipper -> zipper.nthChild(i));
+                        currentPath = tail;
+                    }
+            }
+        }
+    }
+
+    public RoseTree<T> getCurrentSubtree() {
+        return focus;
     }
 
     @Override

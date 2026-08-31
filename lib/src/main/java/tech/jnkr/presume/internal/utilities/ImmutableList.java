@@ -1,12 +1,13 @@
 package tech.jnkr.presume.internal.utilities;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.function.BiFunction;
-import java.util.function.Consumer;
 import java.util.function.Function;
 
-public sealed interface ImmutableList<T> permits Cons, Nil {
+public sealed interface ImmutableList<T> extends Iterable<T> permits Cons, Nil {
 
     static <T> ImmutableList<T> empty() {
         return new Nil<>();
@@ -140,6 +141,7 @@ public sealed interface ImmutableList<T> permits Cons, Nil {
         }
     }
 
+    /*
     default void forEach(Consumer<T> fn) {
         ImmutableList<T> current = this;
         while (true) {
@@ -154,6 +156,7 @@ public sealed interface ImmutableList<T> permits Cons, Nil {
             }
         }
     }
+     */
 
     default <U> U foldLeft(BiFunction<U, T, U> fn, U initial) {
         U acc = initial;
@@ -182,6 +185,54 @@ public sealed interface ImmutableList<T> permits Cons, Nil {
                     {
                         length++;
                         current = tail;
+                    }
+            }
+        }
+    }
+
+    default Maybe<T> getAt(int index) {
+        ImmutableList<T> current = this;
+        int i = 0;
+        while (true) {
+            switch (current) {
+                case Nil():
+                    return Maybe.empty();
+                case Cons(T head, var tail):
+                    {
+                        if (i == index) return Maybe.of(head);
+                        current = tail;
+                    }
+            }
+            i++;
+        }
+    }
+
+    default Iterator<T> iterator() {
+        return new ImmutableListIterator<>(this);
+    }
+
+    class ImmutableListIterator<T> implements Iterator<T> {
+
+        private ImmutableList<T> list;
+
+        public ImmutableListIterator(ImmutableList<T> list) {
+            this.list = list;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return list instanceof Cons<T>;
+        }
+
+        @Override
+        public T next() {
+            switch (list) {
+                case Nil():
+                    throw new NoSuchElementException("Iterator is empty");
+                case Cons(T head, var tail):
+                    {
+                        list = tail;
+                        return head;
                     }
             }
         }
