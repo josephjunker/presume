@@ -33,7 +33,6 @@ public class Shrinker<T> {
                     new ShrinkResults<>(
                             currentShrinkResults.failure,
                             currentShrinkResults.timesShrunk + lastShrinkResults.timesShrunk);
-            // TODO: shrink counts wrong here
             currentShrinkResults = doShrinkingPass(lastShrinkResults.failure);
             i++;
         }
@@ -48,8 +47,9 @@ public class Shrinker<T> {
         Maybe<ShrinkResults<T>> treeShrinkResults =
                 doTreeShrinkingPass(atomShrinks.failure.trace().toHistory());
 
-        // TODO shrink counts wrong here
-        return treeShrinkResults.orDefault(atomShrinks);
+        return treeShrinkResults
+                .map(results -> new ShrinkResults<>(results.failure, atomShrinks.timesShrunk + 1))
+                .orDefault(atomShrinks);
     }
 
     public Maybe<ShrinkResults<T>> doTreeShrinkingPass(History history) {
