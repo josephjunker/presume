@@ -52,7 +52,7 @@ public class Shrinker<T> {
                 .orDefault(atomShrinks);
     }
 
-    public Maybe<ShrinkResults<T>> doTreeShrinkingPass(History history) {
+    private Maybe<ShrinkResults<T>> doTreeShrinkingPass(History history) {
         var contexts = history.contents.getContexts();
 
         for (var zipper : contexts) {
