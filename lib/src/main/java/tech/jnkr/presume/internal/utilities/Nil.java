@@ -12,4 +12,9 @@ public record Nil<T>() implements ImmutableList<T> {
     public int hashCode() {
         return 0;
     }
+
+    @Override
+    public String toString() {
+        return this.toArrayList().toString();
+    }
 }

@@ -27,7 +27,25 @@ public class PropertyRunner<T> {
         for (int i = 0; i < runCount; i++) runner.runOnce();
     }
 
-    private PropertyRunner(AbstractGenerator<T> generator, Consumer<T> property) {
+    public static <T> void runSlug(
+            AbstractGenerator<T> generator, Consumer<T> property, String slug) {
+        PropertyRunner<T> runner = new PropertyRunner<>(generator, property);
+
+        History history = History.fromSlug(slug);
+        ReplayingSource source = new ReplayingSource(history);
+
+        T value;
+
+        try {
+            value = source.call(generator);
+        } catch (Throwable e) {
+            throw new GeneratorThrewException(e.toString());
+        }
+
+        runner.validateOnce(value, history);
+    }
+
+    public PropertyRunner(AbstractGenerator<T> generator, Consumer<T> property) {
         this.generator = generator;
         this.property = property;
     }
@@ -42,6 +60,11 @@ public class PropertyRunner<T> {
             throw new GeneratorThrewException(e.toString());
         }
 
+        History history = new History(recordingSource.getHistory().map(ImmutableList::toArrayList));
+        validateOnce(value, history);
+    }
+
+    private void validateOnce(T value, History recordedHistory) {
         try {
             property.accept(value);
         } catch (Throwable e) {
@@ -49,8 +72,7 @@ public class PropertyRunner<T> {
             // The property has failed! Now we need to collect things so we can shrink.
             // We're on the "slow path" now, so we'll rerun with the recordingSource that will
             // gather more detailed tracing information.
-            History h = new History(recordingSource.getHistory().map(ImmutableList::toArrayList));
-            ReplayingSource replayingSource = new ReplayingSource(h);
+            ReplayingSource replayingSource = new ReplayingSource(recordedHistory);
             T replayedValue;
 
             try {
@@ -81,7 +103,7 @@ public class PropertyRunner<T> {
                 // And report them to the user
                 throw new CounterexampleException(
                         shrinkResults.timesShrunk(),
-                        "", // TODO: serialize counterexample
+                        shrinkResults.failure().trace().toHistory().toSlug(),
                         shrinkResults.failure().counterexample(),
 
                         // It would be nice if we could pass in the actual exception, instead of
@@ -99,7 +121,8 @@ public class PropertyRunner<T> {
         }
     }
 
-    private Shrinker<T> getShrinker(AbstractGenerator<T> generator, Consumer<T> property) {
+    public static <T> Shrinker<T> getShrinker(
+            AbstractGenerator<T> generator, Consumer<T> property) {
         return new Shrinker<T>(
                 history -> {
                     ReplayingSource source =

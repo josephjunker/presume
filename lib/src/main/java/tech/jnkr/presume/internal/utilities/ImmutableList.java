@@ -1,13 +1,11 @@
 package tech.jnkr.presume.internal.utilities;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.NoSuchElementException;
+import java.io.Serializable;
+import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-public sealed interface ImmutableList<T> extends Iterable<T> permits Cons, Nil {
+public sealed interface ImmutableList<T> extends Iterable<T>, Serializable permits Cons, Nil {
 
     static <T> ImmutableList<T> empty() {
         return new Nil<>();

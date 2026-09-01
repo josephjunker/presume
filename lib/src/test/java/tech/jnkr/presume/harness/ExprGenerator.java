@@ -25,7 +25,11 @@ public class ExprGenerator extends AbstractGenerator<Expr> {
                     if (!shouldRecurse) return source.call(new LitGenerator());
 
                     return source.oneOfLeftBiased(
-                            List.of(new AddGenerator(), new MulGenerator(), new NegGenerator()));
+                            List.of(
+                                    new LitGenerator(),
+                                    new AddGenerator(),
+                                    new MulGenerator(),
+                                    new NegGenerator()));
                 }
             };
 

@@ -40,4 +40,9 @@ spotless {
 tasks.named<Test>("test") {
     // Use JUnit Platform for unit tests.
     useJUnitPlatform()
+
+    systemProperty("java.util.logging.config.file", "${layout.buildDirectory.get()}/resources/test/logging.properties")
+    testLogging {
+        showStandardStreams = true
+    }
 }

@@ -8,7 +8,8 @@ public class CounterexampleException extends RuntimeException {
                         """
                         Property failed! Shrunk %d times.
 
-                        Seed: %s
+                        Seed:
+                        %s
 
                         Minimal counterexample:
                         %s

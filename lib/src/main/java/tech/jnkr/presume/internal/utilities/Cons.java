@@ -19,4 +19,9 @@ public record Cons<T>(T head, ImmutableList<T> tail) implements ImmutableList<T>
     public int hashCode() {
         return Objects.hash(head.hashCode(), tail.hashCode());
     }
+
+    @Override
+    public String toString() {
+        return this.toArrayList().toString();
+    }
 }

@@ -7,7 +7,6 @@ import tech.jnkr.presume.internal.atoms.*;
 import tech.jnkr.presume.internal.utilities.*;
 
 import java.util.ArrayList;
-import java.util.Stack;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -21,7 +20,7 @@ public class Shrinker<T> {
 
     public ShrinkResults<T> shrink(Failure<T> failure) {
         ShrinkResults<T> lastShrinkResults = new ShrinkResults<>(failure, 0);
-        ShrinkResults<T> currentShrinkResults = doAtomShrinkingPass(lastShrinkResults.failure);
+        ShrinkResults<T> currentShrinkResults = doShrinkingPass(lastShrinkResults.failure);
         int i = 0;
 
         // TODO: add a timer here, shrink for up to 10 additional seconds instead of using i
@@ -34,99 +33,51 @@ public class Shrinker<T> {
                     new ShrinkResults<>(
                             currentShrinkResults.failure,
                             currentShrinkResults.timesShrunk + lastShrinkResults.timesShrunk);
-            currentShrinkResults = doAtomShrinkingPass(currentShrinkResults.failure);
-
-            Maybe<ShrinkResults<T>> treeShrinkResults =
-                    doTreeShrinkingPass(currentShrinkResults.failure.trace().toHistory());
-
-            switch (treeShrinkResults) {
-                case Nothing():
-                    break;
-                case Just(var treeShrunk):
-                    {
-                        currentShrinkResults =
-                                new ShrinkResults<>(
-                                        treeShrunk.failure,
-                                        currentShrinkResults.timesShrunk + treeShrunk.timesShrunk);
-                    }
-            }
+            // TODO: shrink counts wrong here
+            currentShrinkResults = doShrinkingPass(lastShrinkResults.failure);
             i++;
         }
-
-        System.out.println("!!!!!!");
-        System.out.println(i);
 
         return new ShrinkResults<>(
                 currentShrinkResults.failure,
                 lastShrinkResults.timesShrunk + currentShrinkResults.timesShrunk);
     }
 
-    private Maybe<ShrinkResults<T>> doTreeShrinkingPass(History history) {
-        Stack<ImmutableList<Integer>> paths = new Stack<>();
-        paths.add(ImmutableList.empty());
+    private ShrinkResults<T> doShrinkingPass(Failure<T> failure) {
+        ShrinkResults<T> atomShrinks = doAtomShrinkingPass(failure);
+        Maybe<ShrinkResults<T>> treeShrinkResults =
+                doTreeShrinkingPass(atomShrinks.failure.trace().toHistory());
 
-        History currentHistory = history;
-        Maybe<Failure<T>> lastFailure = Maybe.empty();
-
-        int shrinkCount = 0;
-
-        while (!paths.isEmpty()) {
-            var path = paths.pop();
-            var maybeZipper = currentHistory.contents.toZipper().followPath(path);
-
-            switch (maybeZipper) {
-                case Nothing():
-                    continue;
-                case Just(var zipper):
-                    {
-                        var subtrees = zipper.getCurrentSubtree().getSubtrees(3);
-                        var candidates = subtrees.map(zipper::replaceCurrentSubtree);
-
-                        Maybe<Failure<T>> maybeFailure = findSubtreeFailure(candidates);
-
-                        switch (maybeFailure) {
-                            case Nothing():
-                                {
-                                    for (int i = 0; i < zipper.childCount(); i++) {
-                                        paths.add(path.push(i));
-                                    }
-                                    continue;
-                                }
-                            case Just(var failure):
-                                {
-                                    shrinkCount++;
-
-                                    lastFailure = Maybe.of(failure);
-                                    currentHistory = failure.trace().toHistory();
-
-                                    for (int i = 0;
-                                            i < currentHistory.contents.children.size();
-                                            i++) {
-                                        paths.add(path.push(i));
-                                    }
-                                }
-                        }
-                    }
-            }
-        }
-
-        return switch (lastFailure) {
-            case Nothing() -> Maybe.empty();
-            case Just(var failure) -> Maybe.of(new ShrinkResults<>(failure, shrinkCount));
-        };
+        // TODO shrink counts wrong here
+        return treeShrinkResults.orDefault(atomShrinks);
     }
 
-    private Maybe<Failure<T>> findSubtreeFailure(
-            ImmutableList<RoseTreeZipper<ArrayList<DrawAtom>>> candidates) {
-        for (var candidate : candidates) {
-            Maybe<Failure<T>> maybeFailure = tryReproduce.apply(new History(candidate.toTree()));
+    public Maybe<ShrinkResults<T>> doTreeShrinkingPass(History history) {
+        var contexts = history.contents.getContexts();
+
+        for (var zipper : contexts) {
+            var subtrees = zipper.getCurrentSubtree().getSubtrees(10);
+            var candidates = subtrees.map(zipper::replaceCurrentSubtree);
+
+            Maybe<Failure<T>> maybeFailure = findSubtreeFailure(candidates);
 
             switch (maybeFailure) {
                 case Nothing():
                     continue;
-                case Just(Failure<T> failure):
-                    return maybeFailure;
+                case Just(var failure):
+                    return Maybe.of(new ShrinkResults<>(failure, 1));
             }
+        }
+
+        return Maybe.empty();
+    }
+
+    private Maybe<Failure<T>> findSubtreeFailure(
+            ImmutableList<RoseTreeZipper<ArrayList<DrawAtom>>> candidates) {
+
+        for (var candidate : candidates) {
+            Maybe<Failure<T>> maybeFailure = tryReproduce.apply(new History(candidate.toTree()));
+            if (maybeFailure.isJust()) return maybeFailure;
         }
 
         return Maybe.empty();

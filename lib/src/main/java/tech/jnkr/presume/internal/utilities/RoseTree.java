@@ -1,12 +1,15 @@
 package tech.jnkr.presume.internal.utilities;
 
+import java.io.Serializable;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-public class RoseTree<T> {
+public class RoseTree<T> implements Serializable {
     public final T value;
     public final ImmutableList<RoseTree<T>> children;
+
+    private static final long serialVersionUID = -6209478106026868768L;
 
     public RoseTree(T value, ImmutableList<RoseTree<T>> children) {
         this.value = value;
@@ -45,10 +48,33 @@ public class RoseTree<T> {
             int depth, RoseTree<T> current, ImmutableList<RoseTree<T>> accumulator) {
         if (depth == 0) return accumulator;
 
-        accumulator = current.children.concat(accumulator);
+        for (var child : current.children) {
+            accumulator = accumulator.push(child);
+        }
 
         return current.children.foldLeft(
                 (acc, childTree) -> getSubtreesRecursive(depth - 1, childTree, acc), accumulator);
+    }
+
+    public ImmutableList<RoseTreeZipper<T>> getContexts() {
+        ImmutableList<RoseTreeZipper<T>> result = ImmutableList.empty();
+        ImmutableList<RoseTreeZipper<T>> stack = ImmutableList.of(toZipper());
+
+        while (true) {
+            switch (stack) {
+                case Nil():
+                    return result.reverse();
+                case Cons(var current, var tail):
+                    {
+                        stack = tail;
+                        result = result.push(current);
+
+                        for (int i = 0; i < current.childCount(); i++) {
+                            stack = stack.push(current.nthChild(i).unwrapUnsafe());
+                        }
+                    }
+            }
+        }
     }
 
     @Override
@@ -109,5 +135,10 @@ public class RoseTree<T> {
 
     public int safeHashCode() {
         return foldDepthFirst(Objects::hash, 1);
+    }
+
+    @Override
+    public String toString() {
+        return "RoseTree{" + "value=" + value + ", children=" + children + '}';
     }
 }
