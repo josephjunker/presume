@@ -94,10 +94,6 @@ public class TraceZipper {
                                     switch (innerZipper.focus()) {
                                         case Down():
                                             {
-                                                // TODO not sure about this
-                                                // The idea here is that if we descend into a
-                                                // generator which never pulled a value, we should
-                                                // then just exit back out of it and continue
                                                 var down = traceZipper.down();
                                                 result =
                                                         switch (down) {
