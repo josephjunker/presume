@@ -1,4 +1,4 @@
-package tech.jnkr.presume.harness;
+package tech.jnkr.presume.integration;
 
 import org.junit.jupiter.api.Test;
 

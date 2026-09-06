@@ -1,4 +1,4 @@
-package tech.jnkr.presume.harness;
+package tech.jnkr.presume.integration;
 
 public class ExprOperations {
     public static int eval(Expr expr) {

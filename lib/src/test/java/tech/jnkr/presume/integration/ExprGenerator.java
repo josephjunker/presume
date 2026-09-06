@@ -1,4 +1,4 @@
-package tech.jnkr.presume.harness;
+package tech.jnkr.presume.integration;
 
 import tech.jnkr.presume.AbstractGenerator;
 import tech.jnkr.presume.generators.GenerationSource;

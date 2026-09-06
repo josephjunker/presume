@@ -1,4 +1,4 @@
-package tech.jnkr.presume.harness;
+package tech.jnkr.presume.integration;
 
 public sealed interface Expr {
     record Lit(int x) implements Expr {}

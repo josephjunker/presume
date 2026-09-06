@@ -1,29 +1,36 @@
-package tech.jnkr.presume.harness;
+package tech.jnkr.presume.integration;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 import static tech.jnkr.presume.PropertyRunner.runProperty;
 import static tech.jnkr.presume.PropertyRunner.runSlug;
 
+import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 
 import tech.jnkr.presume.ExampleGenerator;
 import tech.jnkr.presume.ExampleIntListGenerator;
+import tech.jnkr.presume.exceptions.CounterexampleException;
 
 import java.util.ArrayList;
 import java.util.List;
 
 class TestHarness {
-    @Test
-    void assertThatAllBooleansAreTrue() {
-        runProperty(
-                new ExampleGenerator(),
-                (bool) -> {
-                    // Assert that all booleans are true
-                    // if (!bool) throw new RuntimeException("Was false");
-                    assertEquals(true, bool);
-                });
+    @RepeatedTest(100)
+    void assertThatAllBooleansAreTrue_findsMinimalCase() {
+        CounterexampleException exception =
+                assertThrows(
+                        CounterexampleException.class,
+                        () ->
+                                runProperty(
+                                        new ExampleGenerator(),
+                                        (bool) -> {
+                                            // Assert that all booleans are true
+                                            // if (!bool) throw new RuntimeException("Was false");
+                                            assertEquals(true, bool);
+                                        }));
+
+        assertEquals(false, exception.counterexample);
     }
 
     @Test
@@ -36,14 +43,23 @@ class TestHarness {
                 });
     }
 
-    @Test
-    void assertThatBadSortWorks() {
-        runProperty(
-                new ExampleIntListGenerator(),
-                (list) -> {
-                    if (!isOrdered(badSorter(list))) throw new RuntimeException("oh no");
-                },
-                10000);
+    @RepeatedTest(100)
+    void assertThatBadSortWorks_findsMinimalCounterexample() {
+        CounterexampleException exception =
+                assertThrows(
+                        CounterexampleException.class,
+                        () ->
+                                runProperty(
+                                        new ExampleIntListGenerator(),
+                                        (list) -> {
+                                            if (!isOrdered(badSorter(list)))
+                                                throw new RuntimeException("oh no");
+                                        },
+                                        10000));
+
+        ArrayList<Integer> expectedCounterexample = new ArrayList<>(List.of(0, 6, 1, 0));
+
+        assertEquals(expectedCounterexample, exception.counterexample);
     }
 
     private List<Integer> badSorter(List<Integer> list) {
@@ -75,14 +91,27 @@ class TestHarness {
         return true;
     }
 
-    @Test
-    public void assertThatBuggyEval1Works() {
-        runProperty(
-                new ExprGenerator(),
-                (expr) -> {
-                    assertEquals(ExprOperations.eval(expr), ExprOperations.buggyEval1(expr));
-                },
-                1000);
+    @RepeatedTest(100)
+    public void assertThatBuggyEval1Works_findsMinimalCounterexample() {
+        Expr minimal =
+                new Expr.Mul(
+                        new Expr.Add(new Expr.Lit(0), new Expr.Lit(0)),
+                        new Expr.Neg(new Expr.Lit(0)));
+
+        CounterexampleException exception =
+                assertThrows(
+                        CounterexampleException.class,
+                        () ->
+                                runProperty(
+                                        new ExprGenerator(),
+                                        (expr) -> {
+                                            assertEquals(
+                                                    ExprOperations.eval(expr),
+                                                    ExprOperations.buggyEval1(expr));
+                                        },
+                                        10000));
+
+        assertEquals(minimal, exception.counterexample);
     }
 
     @Test

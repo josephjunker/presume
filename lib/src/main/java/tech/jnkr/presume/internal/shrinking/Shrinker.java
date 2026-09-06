@@ -6,6 +6,7 @@ import tech.jnkr.presume.internal.TraceZipper;
 import tech.jnkr.presume.internal.atoms.*;
 import tech.jnkr.presume.internal.utilities.*;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -20,11 +21,13 @@ public class Shrinker<T> {
 
     public ShrinkResults<T> shrink(Failure<T> failure) {
         ShrinkResults<T> lastShrinkResults = new ShrinkResults<>(failure, 0);
-        ShrinkResults<T> currentShrinkResults = doShrinkingPass(lastShrinkResults.failure);
+        ShrinkResults<T> currentShrinkResults = doShrinkingPass(lastShrinkResults.failure, false);
         int i = 0;
 
-        // TODO: add a timer here, shrink for up to 10 additional seconds instead of using i
-        while (i < 10000
+        long startSeconds = Instant.now().getEpochSecond();
+        long currentSeconds = startSeconds;
+
+        while (currentSeconds - startSeconds < 10
                 && !lastShrinkResults
                         .failure
                         .trace()
@@ -33,8 +36,26 @@ public class Shrinker<T> {
                     new ShrinkResults<>(
                             currentShrinkResults.failure,
                             currentShrinkResults.timesShrunk + lastShrinkResults.timesShrunk);
-            currentShrinkResults = doShrinkingPass(lastShrinkResults.failure);
+            currentShrinkResults = doShrinkingPass(lastShrinkResults.failure, false);
             i++;
+            currentSeconds = Instant.now().getEpochSecond();
+        }
+
+        // Same as above, but we do fine shrinking steps.
+        if (currentSeconds - startSeconds < 10) {
+            do {
+                lastShrinkResults =
+                        new ShrinkResults<>(
+                                currentShrinkResults.failure,
+                                currentShrinkResults.timesShrunk + lastShrinkResults.timesShrunk);
+                currentShrinkResults = doShrinkingPass(lastShrinkResults.failure, true);
+                i++;
+                currentSeconds = Instant.now().getEpochSecond();
+            } while (currentSeconds - startSeconds < 10
+                    && !lastShrinkResults
+                            .failure
+                            .trace()
+                            .equals(currentShrinkResults.failure.trace()));
         }
 
         return new ShrinkResults<>(
@@ -42,8 +63,8 @@ public class Shrinker<T> {
                 lastShrinkResults.timesShrunk + currentShrinkResults.timesShrunk);
     }
 
-    private ShrinkResults<T> doShrinkingPass(Failure<T> failure) {
-        ShrinkResults<T> atomShrinks = doAtomShrinkingPass(failure);
+    private ShrinkResults<T> doShrinkingPass(Failure<T> failure, boolean useFineReductions) {
+        ShrinkResults<T> atomShrinks = doAtomShrinkingPass(failure, useFineReductions);
         Maybe<ShrinkResults<T>> treeShrinkResults =
                 doTreeShrinkingPass(atomShrinks.failure.trace().toHistory());
 
@@ -83,14 +104,14 @@ public class Shrinker<T> {
         return Maybe.empty();
     }
 
-    private ShrinkResults<T> doAtomShrinkingPass(Failure<T> failure) {
+    private ShrinkResults<T> doAtomShrinkingPass(Failure<T> failure, boolean useFineReductions) {
         int index = 0;
         var currentFailure = failure;
         int timesShrunk = 0;
 
         while (index < currentFailure.trace().atomCount()) {
             var optionalShrunk =
-                    getTargetAtomShrinks(currentFailure.trace(), index)
+                    getTargetAtomShrinks(currentFailure.trace(), index, useFineReductions)
                             // We don't need exception handling around SourceDepletedException in
                             // here, because tryReproduce will handle it for us.
                             .map(tryReproduce)
@@ -114,7 +135,8 @@ public class Shrinker<T> {
 
     public record ShrinkResults<T>(Failure<T> failure, Integer timesShrunk) {}
 
-    private Stream<History> getTargetAtomShrinks(Trace trace, int targetAtomIndex) {
+    private Stream<History> getTargetAtomShrinks(
+            Trace trace, int targetAtomIndex, boolean useFineReductions) {
         Maybe<TraceZipper> maybeZipper =
                 TraceZipper.fromTrace(trace).chaseToAtomIndex(targetAtomIndex);
 
@@ -132,7 +154,7 @@ public class Shrinker<T> {
                             switch (zipper.focus()) {
                                 case Nothing() -> Stream.empty();
                                 case Just(DrawAtom atom) -> {
-                                    Stream<DrawAtom> shrinks = shrinkAtom(atom);
+                                    Stream<DrawAtom> shrinks = shrinkAtom(atom, useFineReductions);
 
                                     yield shrinks.flatMap(
                                             smallerAtom -> replaceFocus.apply(zipper, smallerAtom));
@@ -143,35 +165,38 @@ public class Shrinker<T> {
         return shrunkZippers.map(zipper -> zipper.toTrace().toHistory());
     }
 
-    private Stream<DrawAtom> shrinkAtom(DrawAtom atom) {
+    private Stream<DrawAtom> shrinkAtom(DrawAtom atom, boolean useFineReductions) {
         return switch (atom) {
             case Trivial1() -> Stream.of();
             case Trivial2() -> Stream.of(new Trivial1());
             case Regular(int magnitude, boolean sign, boolean simplify) -> {
                 Stream<DrawAtom> trivials = Stream.of(new Trivial1(), new Trivial2());
                 Stream<DrawAtom> flags = simplifyFlags(magnitude, sign, simplify);
-                Stream<Float> reductionSchedule =
+                Stream<Float> coarseReductionSchedule =
                         Stream.of(
                                 1000f, 500f, 100f, 20f, 10f, 2f, 1.5f, 1.4f, 1.25f, 1.1f, 1.05f,
                                 1.01f, 1.001f, 1.0001f);
 
-                Stream<DrawAtom> reduced =
-                        reductionSchedule.flatMap(
-                                reductionRatio ->
-                                        Stream.concat(
-                                                simplifyFlags(
-                                                        (int) ((float) magnitude / reductionRatio),
-                                                        sign,
-                                                        simplify),
-                                                Stream.of(
-                                                        new Regular(
-                                                                (int)
-                                                                        ((float) magnitude
-                                                                                / reductionRatio),
-                                                                sign,
-                                                                simplify))));
+                Stream<Integer> coarseReducedMagnitudes =
+                        coarseReductionSchedule.map(
+                                reductionRatio -> (int) ((float) magnitude / reductionRatio));
 
-                yield Stream.concat(Stream.concat(trivials, flags), reduced);
+                Stream<DrawAtom> coarseReduced =
+                        shrunkAtomsFromMagnitudes(coarseReducedMagnitudes, sign, simplify);
+
+                Stream<Integer> fineReducedMagnitudes =
+                        useFineReductions
+                                ? Stream.concat(
+                                        Stream.iterate(0, i -> i <= 100, i -> i + 1),
+                                        Stream.iterate(
+                                                magnitude, i -> magnitude - i <= 100, i -> i - 1))
+                                : Stream.of();
+
+                Stream<DrawAtom> fineReduced =
+                        shrunkAtomsFromMagnitudes(fineReducedMagnitudes, sign, simplify);
+
+                yield Stream.concat(
+                        Stream.concat(Stream.concat(trivials, flags), coarseReduced), fineReduced);
             }
             case Edge(int magnitude, boolean sign) -> {
                 // Any `Regular` is "smaller" than an `Edge` from the shrinker's
@@ -198,6 +223,15 @@ public class Shrinker<T> {
                         simplifyFlags(magnitude, false, false));
             }
         };
+    }
+
+    private Stream<DrawAtom> shrunkAtomsFromMagnitudes(
+            Stream<Integer> magnitudes, boolean sign, boolean simplify) {
+        return magnitudes.flatMap(
+                magnitude ->
+                        Stream.concat(
+                                simplifyFlags(magnitude, sign, simplify),
+                                Stream.of(new Regular(magnitude, sign, simplify))));
     }
 
     private Stream<DrawAtom> simplifyFlags(int magnitude, boolean sign, boolean simplify) {
