@@ -1,10 +1,11 @@
-package tech.jnkr.presume;
+package tech.jnkr.presume.integration;
 
+import tech.jnkr.presume.AbstractGenerator;
 import tech.jnkr.presume.generators.GenerationSource;
 
 import java.util.ArrayList;
 
-public class ExampleIntListGenerator extends AbstractGenerator<ArrayList<Integer>> {
+public class IntListGenerator extends AbstractGenerator<ArrayList<Integer>> {
     @Override
     protected ArrayList<Integer> gen(GenerationSource source) {
         int length = source.getInteger(0, 10);
