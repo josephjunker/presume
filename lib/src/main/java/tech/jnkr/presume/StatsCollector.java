@@ -1,25 +1,25 @@
 package tech.jnkr.presume;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Map;
+import tech.jnkr.presume.exceptions.GeneratorStatsAssertionFailureException;
+
+import java.util.*;
 import java.util.function.Function;
 
 public class StatsCollector<T> {
     private final AbstractGenerator<T> generator;
-    private final ArrayList<Bucketer<T, ?>> bucketers;
+    private final ArrayList<EnumBucketer<T, ?>> bucketers;
 
     public StatsCollector(AbstractGenerator<T> generator) {
         this.generator = generator;
         this.bucketers = new ArrayList<>();
     }
 
-    public <Buckets extends Enum<Buckets>> StatsCollector<T> withBucket(
+    public <Buckets extends Enum<Buckets>> EnumBucketer<T, Buckets> addEnumBucket(
             Class<Buckets> bucketsEnum, String title, Function<T, Buckets> discriminator) {
-        bucketers.add(new Bucketer<>(title, bucketsEnum, discriminator));
+        var bucketer = new EnumBucketer<>(title, bucketsEnum, discriminator);
+        this.bucketers.add(bucketer);
 
-        return this;
+        return bucketer;
     }
 
     public enum BooleanEnum {
@@ -27,14 +27,12 @@ public class StatsCollector<T> {
         FALSE
     }
 
-    public StatsCollector<T> withBooleanBucket(String title, Function<T, Boolean> discriminator) {
-        bucketers.add(
-                new Bucketer<>(
-                        title,
-                        BooleanEnum.class,
-                        t -> discriminator.apply(t) ? BooleanEnum.TRUE : BooleanEnum.FALSE));
+    public BooleanBucketer<T> addBooleanBucket(String title, Function<T, Boolean> discriminator) {
+        BooleanBucketer<T> result = new BooleanBucketer<>(title, discriminator);
 
-        return this;
+        bucketers.add(result);
+
+        return result;
     }
 
     public void summarize(int runCount) {
@@ -44,16 +42,49 @@ public class StatsCollector<T> {
         }
 
         System.out.println("STATS\n=====\n");
-        bucketers.forEach(Bucketer::print);
+        bucketers.forEach(EnumBucketer::print);
+
+        bucketers.forEach(EnumBucketer::validate);
     }
 
-    public static class Bucketer<T, Buckets extends Enum<Buckets>> {
+    public static class BooleanBucketer<T> extends EnumBucketer<T, BooleanEnum> {
+        private BooleanBucketer(String title, Function<T, Boolean> discriminator) {
+            super(
+                    title,
+                    BooleanEnum.class,
+                    (T t) -> discriminator.apply(t) ? BooleanEnum.TRUE : BooleanEnum.FALSE);
+        }
+
+        public BooleanBucketer<T> withMinimumTrueRatio(float ratio) {
+            super.withMinimumRatio(BooleanEnum.TRUE, ratio);
+            return this;
+        }
+
+        public BooleanBucketer<T> withMaximumTrueRatio(float ratio) {
+            super.withMaximumRatio(BooleanEnum.TRUE, ratio);
+            return this;
+        }
+
+        public BooleanBucketer<T> withMinimumFalseRatio(float ratio) {
+            super.withMinimumRatio(BooleanEnum.FALSE, ratio);
+            return this;
+        }
+
+        public BooleanBucketer<T> withMaximumFalseRatio(float ratio) {
+            super.withMaximumRatio(BooleanEnum.FALSE, ratio);
+            return this;
+        }
+    }
+
+    public static class EnumBucketer<T, Buckets extends Enum<Buckets>> {
         private final String title;
         private final HashMap<Buckets, Integer> buckets;
         private final Function<T, Buckets> discriminator;
         private final Buckets[] bucketInEnumOrder;
+        private final HashMap<Buckets, Float> minimumRatioAssertions;
+        private final HashMap<Buckets, Float> maximumRatioAssertions;
 
-        public Bucketer(
+        protected EnumBucketer(
                 String title, Class<Buckets> bucketsEnum, Function<T, Buckets> discriminator) {
             this.title = title;
             buckets = new HashMap<>();
@@ -63,9 +94,12 @@ public class StatsCollector<T> {
             for (Buckets bucket : bucketsEnum.getEnumConstants()) {
                 buckets.put(bucket, 0);
             }
+
+            minimumRatioAssertions = new HashMap<>();
+            maximumRatioAssertions = new HashMap<>();
         }
 
-        public void consume(T t) {
+        private void consume(T t) {
             Buckets bucket = discriminator.apply(t);
             increment(bucket);
         }
@@ -74,7 +108,7 @@ public class StatsCollector<T> {
             buckets.put(bucket, buckets.get(bucket) + 1);
         }
 
-        public void print() {
+        private void print() {
             ArrayList<Map.Entry<Buckets, Integer>> entries = new ArrayList<>(buckets.entrySet());
 
             int maxLabelLength =
@@ -107,6 +141,46 @@ public class StatsCollector<T> {
                 System.out.println();
             }
             System.out.println();
+        }
+
+        private void validate() {
+            float totalEntries = buckets.values().stream().mapToInt(i -> i).sum();
+
+            for (var entry : minimumRatioAssertions.entrySet()) {
+                float value = buckets.get(entry.getKey());
+                float actualRatio = value / totalEntries;
+                float expectedRatio = entry.getValue();
+                if (actualRatio < expectedRatio)
+                    throw GeneratorStatsAssertionFailureException.minimumFailed(
+                            title, entry.getKey().name(), expectedRatio, actualRatio);
+            }
+
+            for (var entry : maximumRatioAssertions.entrySet()) {
+                float value = buckets.get(entry.getKey());
+                float actualRatio = value / totalEntries;
+                float expectedRatio = entry.getValue();
+                if (actualRatio > expectedRatio)
+                    throw GeneratorStatsAssertionFailureException.maximumFailed(
+                            title, entry.getKey().name(), expectedRatio, actualRatio);
+            }
+        }
+
+        public EnumBucketer<T, Buckets> withMinimumRatio(Buckets bucket, float ratio) {
+            minimumRatioAssertions.compute(
+                    bucket,
+                    (key, existing) ->
+                            Objects.isNull(existing) ? ratio : Math.max(existing, ratio));
+
+            return this;
+        }
+
+        public EnumBucketer<T, Buckets> withMaximumRatio(Buckets bucket, float ratio) {
+            maximumRatioAssertions.compute(
+                    bucket,
+                    (key, existing) ->
+                            Objects.isNull(existing) ? ratio : Math.min(existing, ratio));
+
+            return this;
         }
     }
 }
