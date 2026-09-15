@@ -1,11 +1,9 @@
 package tech.jnkr.presume;
 
 import tech.jnkr.presume.exceptions.SourceDepletedException;
-import tech.jnkr.presume.generators.*;
 import tech.jnkr.presume.internal.History;
 import tech.jnkr.presume.internal.Trace;
 import tech.jnkr.presume.internal.atoms.DrawAtom;
-import tech.jnkr.presume.internal.generators.*;
 import tech.jnkr.presume.internal.shrinking.Down;
 import tech.jnkr.presume.internal.shrinking.Right;
 import tech.jnkr.presume.internal.shrinking.TraceEntry;
@@ -20,14 +18,11 @@ class ReplayingSource implements GenerationSource {
     private Maybe<ListZipper<DrawAtom>> atomCursor;
     private Maybe<ListZipper<RoseTree<ArrayList<DrawAtom>>>> childCursor;
 
-    private final ConcreteBooleanGenerator booleanGenerator =
-            new ConcreteBooleanGenerator(this::getAtom);
-    private final ConcreteIntegerGenerator integerGenerator =
-            new ConcreteIntegerGenerator(this::getAtom);
-    private final ConcreteLongGenerator longGenerator = new ConcreteLongGenerator(this::getAtom);
-    private final ConcreteFloatGenerator floatGenerator = new ConcreteFloatGenerator(this::getAtom);
-    private final ConcreteDoubleGenerator doubleGenerator =
-            new ConcreteDoubleGenerator(this::getAtom);
+    private final BooleanGenerator booleanGenerator = new BooleanGenerator(this::getAtom);
+    private final IntegerGenerator integerGenerator = new IntegerGenerator(this::getAtom);
+    private final LongGenerator longGenerator = new LongGenerator(this::getAtom);
+    private final FloatGenerator floatGenerator = new FloatGenerator(this::getAtom);
+    private final DoubleGenerator doubleGenerator = new DoubleGenerator(this::getAtom);
 
     public ReplayingSource(History history, MutableRoseTree<ArrayList<TraceEntry>> trace) {
         this.atomCursor = ListZipper.from(ImmutableList.fromList(history.contents.value));
@@ -58,7 +53,7 @@ class ReplayingSource implements GenerationSource {
 
     @Override
     public boolean getBoolean() {
-        return booleanGenerator.gen();
+        return booleanGenerator.gen(this);
     }
 
     @Override
@@ -68,7 +63,7 @@ class ReplayingSource implements GenerationSource {
 
     @Override
     public int getInteger() {
-        return integerGenerator.gen();
+        return integerGenerator.gen(this);
     }
 
     @Override

@@ -1,12 +1,11 @@
-package tech.jnkr.presume.internal.generators;
+package tech.jnkr.presume;
 
 import tech.jnkr.presume.exceptions.InvalidGeneratorException;
-import tech.jnkr.presume.generators.FloatGenerator;
 import tech.jnkr.presume.internal.atoms.*;
 
 import java.util.function.Supplier;
 
-public class ConcreteFloatGenerator implements SimpleGenerator<Float>, FloatGenerator {
+public class FloatGenerator extends AbstractGenerator<Float> {
     private final float minimum;
     private final float maximum;
     private final float approaching;
@@ -24,7 +23,7 @@ public class ConcreteFloatGenerator implements SimpleGenerator<Float>, FloatGene
     private static final int exponentRange = 2 ^ 8;
     private static final float exponentMaxIntRatio = (float) exponentRange / Integer.MAX_VALUE;
 
-    public ConcreteFloatGenerator(Supplier<DrawAtom> atomSupplier) {
+    FloatGenerator(Supplier<DrawAtom> atomSupplier) {
         this.atomSupplier = atomSupplier;
         minimum = -Float.MAX_VALUE / 2f;
         maximum = Float.MAX_VALUE / 2f;
@@ -33,7 +32,7 @@ public class ConcreteFloatGenerator implements SimpleGenerator<Float>, FloatGene
         allowInfinity = true;
     }
 
-    private ConcreteFloatGenerator(
+    private FloatGenerator(
             Supplier<DrawAtom> atomSupplier,
             float minimum,
             float maximum,
@@ -48,49 +47,38 @@ public class ConcreteFloatGenerator implements SimpleGenerator<Float>, FloatGene
         this.allowInfinity = allowInfinity;
     }
 
-    @Override
-    public ConcreteFloatGenerator withMinimum(float minimum) {
-        return new ConcreteFloatGenerator(
+    public FloatGenerator withMinimum(float minimum) {
+        return new FloatGenerator(
                 atomSupplier, minimum, maximum, approaching, allowNaN, allowInfinity);
     }
 
-    @Override
-    public ConcreteFloatGenerator withMaximum(float maximum) {
-        return new ConcreteFloatGenerator(
+    public FloatGenerator withMaximum(float maximum) {
+        return new FloatGenerator(
                 atomSupplier, minimum, maximum, approaching, allowNaN, allowInfinity);
     }
 
-    @Override
-    public ConcreteFloatGenerator shrinkingTowards(float approaching) {
-        return new ConcreteFloatGenerator(
+    public FloatGenerator shrinkingTowards(float approaching) {
+        return new FloatGenerator(
                 atomSupplier, minimum, maximum, approaching, allowNaN, allowInfinity);
     }
 
-    @Override
-    public ConcreteFloatGenerator allowNaN() {
-        return new ConcreteFloatGenerator(
-                atomSupplier, minimum, maximum, approaching, true, allowInfinity);
+    public FloatGenerator allowNaN() {
+        return new FloatGenerator(atomSupplier, minimum, maximum, approaching, true, allowInfinity);
     }
 
-    @Override
-    public ConcreteFloatGenerator disallowNaN() {
-        return new ConcreteFloatGenerator(
+    public FloatGenerator disallowNaN() {
+        return new FloatGenerator(
                 atomSupplier, minimum, maximum, approaching, false, allowInfinity);
     }
 
-    @Override
-    public ConcreteFloatGenerator allowInfinity() {
-        return new ConcreteFloatGenerator(
-                atomSupplier, minimum, maximum, approaching, allowNaN, true);
+    public FloatGenerator allowInfinity() {
+        return new FloatGenerator(atomSupplier, minimum, maximum, approaching, allowNaN, true);
     }
 
-    @Override
-    public ConcreteFloatGenerator disallowInfinity() {
-        return new ConcreteFloatGenerator(
-                atomSupplier, minimum, maximum, approaching, allowNaN, false);
+    public FloatGenerator disallowInfinity() {
+        return new FloatGenerator(atomSupplier, minimum, maximum, approaching, allowNaN, false);
     }
 
-    @Override
     public Float gen() {
         return produce(atomSupplier.get(), atomSupplier.get());
     }
@@ -184,5 +172,10 @@ public class ConcreteFloatGenerator implements SimpleGenerator<Float>, FloatGene
         float result = Float.intBitsToFloat(bits);
         if (simplify) return (float) (int) result;
         return result;
+    }
+
+    @Override
+    protected Float gen(GenerationSource source) {
+        return produce(atomSupplier.get(), atomSupplier.get());
     }
 }

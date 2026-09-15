@@ -1,12 +1,11 @@
-package tech.jnkr.presume.internal.generators;
+package tech.jnkr.presume;
 
 import tech.jnkr.presume.exceptions.InvalidGeneratorException;
-import tech.jnkr.presume.generators.LongGenerator;
 import tech.jnkr.presume.internal.atoms.*;
 
 import java.util.function.Supplier;
 
-public class ConcreteLongGenerator implements SimpleGenerator<Long>, LongGenerator {
+public class LongGenerator extends AbstractGenerator<Long> {
     private final long minimum;
     private final long maximum;
     private final long approaching;
@@ -15,14 +14,14 @@ public class ConcreteLongGenerator implements SimpleGenerator<Long>, LongGenerat
     private static final int oneThirdMaxInt = Integer.MAX_VALUE / 3;
     private static final int twoThirdsMaxInt = oneThirdMaxInt * 2;
 
-    public ConcreteLongGenerator(Supplier<DrawAtom> atomSupplier) {
+    public LongGenerator(Supplier<DrawAtom> atomSupplier) {
         this.atomSupplier = atomSupplier;
         minimum = Long.MIN_VALUE;
         maximum = Long.MAX_VALUE;
         approaching = 0;
     }
 
-    private ConcreteLongGenerator(
+    private LongGenerator(
             Supplier<DrawAtom> atomSupplier, long minimum, long maximum, long approaching) {
         this.atomSupplier = atomSupplier;
         this.minimum = minimum;
@@ -30,22 +29,18 @@ public class ConcreteLongGenerator implements SimpleGenerator<Long>, LongGenerat
         this.approaching = approaching;
     }
 
-    @Override
-    public ConcreteLongGenerator withMinimum(long minimum) {
-        return new ConcreteLongGenerator(atomSupplier, minimum, maximum, approaching);
+    public LongGenerator withMinimum(long minimum) {
+        return new LongGenerator(atomSupplier, minimum, maximum, approaching);
     }
 
-    @Override
-    public ConcreteLongGenerator withMaximum(long maximum) {
-        return new ConcreteLongGenerator(atomSupplier, minimum, maximum, approaching);
+    public LongGenerator withMaximum(long maximum) {
+        return new LongGenerator(atomSupplier, minimum, maximum, approaching);
     }
 
-    @Override
-    public ConcreteLongGenerator shrinkingTowards(long target) {
-        return new ConcreteLongGenerator(atomSupplier, minimum, maximum, target);
+    public LongGenerator shrinkingTowards(long target) {
+        return new LongGenerator(atomSupplier, minimum, maximum, target);
     }
 
-    @Override
     public Long gen() {
         return produce(atomSupplier.get(), atomSupplier.get());
     }
@@ -91,5 +86,10 @@ public class ConcreteLongGenerator implements SimpleGenerator<Long>, LongGenerat
                 },
                 minimum,
                 maximum);
+    }
+
+    @Override
+    protected Long gen(GenerationSource source) {
+        return produce(atomSupplier.get(), atomSupplier.get());
     }
 }

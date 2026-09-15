@@ -1,4 +1,4 @@
-package tech.jnkr.presume.internal.generators;
+package tech.jnkr.presume;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -8,16 +8,15 @@ import tech.jnkr.presume.internal.atoms.AtomSource;
 import tech.jnkr.presume.internal.atoms.DrawAtom;
 import tech.jnkr.presume.internal.atoms.Regular;
 
-public class ConcreteIntegerGeneratorTests {
+public class IntegerGeneratorTests {
     @RepeatedTest(10)
     public void shouldProduceBothOddAndEvenNumbers() {
-        ConcreteIntegerGenerator generator =
-                new ConcreteIntegerGenerator(ConcreteIntegerGeneratorTests::getRegular);
+        IntegerGenerator generator = new IntegerGenerator(IntegerGeneratorTests::getRegular);
 
         int evenCount = 0;
         int oddCount = 0;
         for (int i = 0; i < 1000; i++) {
-            if (generator.gen() % 2 == 0) {
+            if (generator.gen(new PureSource()) % 2 == 0) {
                 evenCount++;
             } else {
                 oddCount++;

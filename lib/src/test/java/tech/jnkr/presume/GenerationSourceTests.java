@@ -2,8 +2,6 @@ package tech.jnkr.presume;
 
 import org.junit.jupiter.api.Test;
 
-import tech.jnkr.presume.generators.GenerationSource;
-
 public class GenerationSourceTests {
 
     @Test

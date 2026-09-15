@@ -6,12 +6,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import tech.jnkr.presume.generators.GenerationSource;
 import tech.jnkr.presume.internal.History;
 import tech.jnkr.presume.internal.Trace;
 import tech.jnkr.presume.internal.TraceZipper;
 import tech.jnkr.presume.internal.atoms.DrawAtom;
-import tech.jnkr.presume.internal.generators.ConcreteIntegerGenerator;
 import tech.jnkr.presume.internal.utilities.ImmutableList;
 import tech.jnkr.presume.internal.utilities.Just;
 import tech.jnkr.presume.internal.utilities.Maybe;
@@ -150,8 +148,8 @@ public class TraceZipperTests {
         switch (focus) {
             case Nothing() -> throw new RuntimeException("Assertion failed");
             case Just(DrawAtom atom) -> {
-                ConcreteIntegerGenerator intGen = new ConcreteIntegerGenerator(() -> atom);
-                assertEquals(intGen.gen(), value);
+                IntegerGenerator intGen = new IntegerGenerator(() -> atom);
+                assertEquals(intGen.gen(new PureSource()), value);
             }
         }
     }

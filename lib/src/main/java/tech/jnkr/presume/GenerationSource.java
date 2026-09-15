@@ -1,6 +1,5 @@
-package tech.jnkr.presume.generators;
+package tech.jnkr.presume;
 
-import tech.jnkr.presume.AbstractGenerator;
 import tech.jnkr.presume.exceptions.InvalidGeneratorException;
 
 import java.util.List;
@@ -18,7 +17,7 @@ public interface GenerationSource {
     int getInteger();
 
     default int getInteger(int minimum, int maximum) {
-        return integerGen().withMinimum(minimum).withMaximum(maximum).gen();
+        return integerGen().withMinimum(minimum).withMaximum(maximum).gen(this);
     }
 
     IntegerGenerator integerGen();
@@ -81,8 +80,6 @@ public interface GenerationSource {
                     "Tried to call oneOf without providing any generators");
 
         int index = getInteger(0, generators.size() - 1);
-
-        // System.out.println(index);
 
         return call(generators.get(index));
     }

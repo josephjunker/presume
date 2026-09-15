@@ -1,7 +1,7 @@
 package tech.jnkr.presume.integration;
 
 import tech.jnkr.presume.AbstractGenerator;
-import tech.jnkr.presume.generators.GenerationSource;
+import tech.jnkr.presume.GenerationSource;
 
 import java.util.ArrayList;
 

@@ -3,7 +3,7 @@ package tech.jnkr.presume.integration;
 import org.jspecify.annotations.NonNull;
 
 import tech.jnkr.presume.AbstractGenerator;
-import tech.jnkr.presume.generators.GenerationSource;
+import tech.jnkr.presume.GenerationSource;
 
 public class SimpleBooleanGenerator extends AbstractGenerator<Boolean> {
     @Override

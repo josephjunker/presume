@@ -7,7 +7,6 @@ import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.RepeatedTest;
 
-import tech.jnkr.presume.generators.GenerationSource;
 import tech.jnkr.presume.internal.History;
 import tech.jnkr.presume.internal.Trace;
 import tech.jnkr.presume.internal.TraceZipper;
@@ -76,7 +75,7 @@ public class SourceAndTraceTests {
     public static class SampleGenerator5 extends AbstractGenerator<ImmutableList<Object>> {
         @Override
         protected ImmutableList<Object> gen(@NonNull GenerationSource drawer) {
-            int length = drawer.integerGen().withMinimum(0).withMaximum(10).gen();
+            int length = drawer.integerGen().withMinimum(0).withMaximum(10).gen(drawer);
             ImmutableList<Object> result = ImmutableList.empty();
 
             for (int i = 0; i < length; i++) {

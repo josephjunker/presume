@@ -1,12 +1,12 @@
-package tech.jnkr.presume.internal.generators;
+package tech.jnkr.presume;
 
 import tech.jnkr.presume.exceptions.InvalidGeneratorException;
 import tech.jnkr.presume.internal.atoms.*;
 
 import java.util.function.Supplier;
 
-public class ConcreteIntegerGenerator
-        implements SimpleGenerator<Integer>, tech.jnkr.presume.generators.IntegerGenerator {
+public class IntegerGenerator extends AbstractGenerator<Integer> {
+
     private final int minimum;
     private final int maximum;
     private final int approaching;
@@ -15,14 +15,14 @@ public class ConcreteIntegerGenerator
     private static final int oneThirdMax = Integer.MAX_VALUE / 3;
     private static final int twoThirdsMax = oneThirdMax * 2;
 
-    public ConcreteIntegerGenerator(Supplier<DrawAtom> atomSupplier) {
+    IntegerGenerator(Supplier<DrawAtom> atomSupplier) {
         this.atomSupplier = atomSupplier;
         minimum = Integer.MIN_VALUE;
         maximum = Integer.MAX_VALUE;
         approaching = 0;
     }
 
-    private ConcreteIntegerGenerator(
+    private IntegerGenerator(
             Supplier<DrawAtom> atomSupplier, int minimum, int maximum, int approaching) {
         this.atomSupplier = atomSupplier;
         this.minimum = minimum;
@@ -30,23 +30,20 @@ public class ConcreteIntegerGenerator
         this.approaching = approaching;
     }
 
-    @Override
-    public ConcreteIntegerGenerator withMinimum(int minimum) {
-        return new ConcreteIntegerGenerator(atomSupplier, minimum, maximum, approaching);
+    public IntegerGenerator withMinimum(int minimum) {
+        return new IntegerGenerator(atomSupplier, minimum, maximum, approaching);
+    }
+
+    public IntegerGenerator withMaximum(int maximum) {
+        return new IntegerGenerator(atomSupplier, minimum, maximum, approaching);
+    }
+
+    public IntegerGenerator shrinkingTowards(int approaching) {
+        return new IntegerGenerator(atomSupplier, minimum, maximum, approaching);
     }
 
     @Override
-    public ConcreteIntegerGenerator withMaximum(int maximum) {
-        return new ConcreteIntegerGenerator(atomSupplier, minimum, maximum, approaching);
-    }
-
-    @Override
-    public ConcreteIntegerGenerator shrinkingTowards(int approaching) {
-        return new ConcreteIntegerGenerator(atomSupplier, minimum, maximum, approaching);
-    }
-
-    @Override
-    public Integer gen() {
+    protected Integer gen(GenerationSource source) {
         return produce(atomSupplier.get());
     }
 
