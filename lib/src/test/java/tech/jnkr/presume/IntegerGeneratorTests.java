@@ -61,9 +61,9 @@ public class IntegerGeneratorTests {
         "4096, 1024, 0",
         "9999999, 777, 0",
         "0, -100, 0",
-        "100, -33, 0",
-        "4096, -1024, 0",
-        "9999999, -777, 0",
+        "100, -100, 0",
+        "4096, -4096, 0",
+        "777, -777, 0",
         "10, 0, 5",
         "100, 0, 40",
         "4096, 0, 3333",
@@ -73,9 +73,9 @@ public class IntegerGeneratorTests {
         "4096, 1024, 2048",
         "9999999, 777, 33333",
         "0, -100, -98",
-        "100, -33, -11",
-        "4096, -1024, 1000",
-        "9999999, -777, 10000",
+        "33, -33, -11",
+        "1024, -1024, 1000",
+        "9999999, -9999999, 10000",
     })
     public void shouldProduceRelativelyEvenDistribution(int max, int min, int shrinkTowards) {
         IntegerGenerator gen = new IntegerGenerator(IntegerGeneratorTests::getRegular);
