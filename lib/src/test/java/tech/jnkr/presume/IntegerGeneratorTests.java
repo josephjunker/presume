@@ -11,7 +11,6 @@ public class IntegerGeneratorTests {
     @ParameterizedTest
     @CsvSource({
         "10, 0, 0",
-        "0, 0, 0",
         "100, 0, 0",
         "4096, 0, 0",
         "9999999, 0, 0",
@@ -24,7 +23,6 @@ public class IntegerGeneratorTests {
         "4096, -1024, 0",
         "9999999, -777, 0",
         "10, 0, 5",
-        "0, 0, 99999",
         "100, 0, 40",
         "4096, 0, 3333",
         "9999999, 0, 1",
@@ -39,8 +37,8 @@ public class IntegerGeneratorTests {
     })
     public void shouldProduceBothOddAndEvenNumbers(int max, int min, int shrinkTowards) {
         IntegerGenerator gen = new IntegerGenerator(IntegerGeneratorTests::getRegular);
-        if (max != 0) gen = gen.withMaximum(max);
-        if (min != 0) gen = gen.withMinimum(min);
+        gen = gen.withMaximum(max);
+        gen = gen.withMinimum(min);
         if (shrinkTowards != 0) gen = gen.shrinkingTowards(shrinkTowards);
 
         StatsCollector<Integer> collector = new StatsCollector<>(gen);
@@ -55,7 +53,6 @@ public class IntegerGeneratorTests {
     @ParameterizedTest
     @CsvSource({
         "10, 0, 0",
-        "0, 0, 0",
         "100, 0, 0",
         "4096, 0, 0",
         "9999999, 0, 0",
@@ -68,7 +65,6 @@ public class IntegerGeneratorTests {
         "4096, -1024, 0",
         "9999999, -777, 0",
         "10, 0, 5",
-        "0, 0, 99999",
         "100, 0, 40",
         "4096, 0, 3333",
         "9999999, 0, 1",
@@ -81,11 +77,20 @@ public class IntegerGeneratorTests {
         "4096, -1024, 1000",
         "9999999, -777, 10000",
     })
-    public void shouldProduceRelativelyEvenDistribution(int min, int max, int shrinkTowards) {
+    public void shouldProduceRelativelyEvenDistribution(int max, int min, int shrinkTowards) {
         IntegerGenerator gen = new IntegerGenerator(IntegerGeneratorTests::getRegular);
-        if (max != 0) gen = gen.withMaximum(max);
-        if (min != 0) gen = gen.withMinimum(min);
+        gen = gen.withMaximum(max);
+        gen = gen.withMinimum(min);
         if (shrinkTowards != 0) gen = gen.shrinkingTowards(shrinkTowards);
+
+        StatsCollector<Integer> collector = new StatsCollector<>(gen);
+
+        var buckets = collector.addIntegerBucket("Integer distributions", min, max, 10, x -> x);
+        for (int i = 0; i < 10; i++) {
+            buckets.withMinimumRatio(i, 0.05f).withMaximumRatio(i, 0.2f);
+        }
+
+        collector.summarize(100_000);
     }
 
     public static DrawAtom getRegular() {

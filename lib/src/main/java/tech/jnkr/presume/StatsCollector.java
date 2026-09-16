@@ -30,6 +30,16 @@ public class StatsCollector<T> {
         return result;
     }
 
+    public IntegerBucketer<T> addIntegerBucket(
+            String title, int min, int max, int numBuckets, Function<T, Integer> discriminator) {
+        IntegerBucketer<T> result =
+                new IntegerBucketer<>(title, min, max, numBuckets, discriminator);
+
+        bucketers.add(result);
+
+        return result;
+    }
+
     public void summarize(int runCount) {
         for (int i = 0; i < runCount; i++) {
             T value = generator.internalGen(new PureSource());
@@ -116,18 +126,25 @@ public class StatsCollector<T> {
         }
     }
 
-    public static final class IntegerBucketer extends BaseBucketer<Integer> {
+    public static final class IntegerBucketer<T> extends BaseBucketer<T> {
         private final String title;
         private final int bucketCount;
         private final int bucketSize;
         private final int min;
         private final HashMap<String, Integer> counts;
+        private final Function<T, Integer> discriminator;
 
-        private IntegerBucketer(String title, int min, int max, int bucketCount) {
+        private IntegerBucketer(
+                String title,
+                int min,
+                int max,
+                int bucketCount,
+                Function<T, Integer> discriminator) {
             super();
             this.title = title;
             this.bucketCount = bucketCount;
             this.min = min;
+            this.discriminator = discriminator;
             bucketSize = (max - min) / bucketCount;
 
             counts = new HashMap<>();
@@ -139,9 +156,25 @@ public class StatsCollector<T> {
             return String.format("%d to %d", bucketMin, bucketMax);
         }
 
+        public IntegerBucketer<T> withMinimumRatio(int index, float ratio) {
+            minimumRatioAssertions.compute(
+                    getBucketName(index),
+                    (key, existing) ->
+                            Objects.isNull(existing) ? ratio : Math.max(existing, ratio));
+            return this;
+        }
+
+        public IntegerBucketer<T> withMaximumRatio(int index, float ratio) {
+            maximumRatioAssertions.compute(
+                    getBucketName(index),
+                    (key, existing) ->
+                            Objects.isNull(existing) ? ratio : Math.min(existing, ratio));
+            return this;
+        }
+
         @Override
-        protected void consume(Integer input) {
-            int index = (input - min) / bucketSize;
+        protected void consume(T input) {
+            int index = (discriminator.apply(input) - min) / bucketSize;
             String bucketName = getBucketName(index);
             counts.compute(bucketName, (name, value) -> Objects.isNull(value) ? 1 : value + 1);
         }
@@ -159,7 +192,7 @@ public class StatsCollector<T> {
         @Override
         protected List<String> getBucketNames() {
             ArrayList<String> result = new ArrayList<>();
-            for (int i = 0; i < bucketCount; i++) {
+            for (int i = bucketCount - 1; i >= 0; i--) {
                 result.add(getBucketName(i));
             }
             return result;
@@ -191,7 +224,7 @@ public class StatsCollector<T> {
             minimumRatioAssertions.compute(
                     "TRUE",
                     (key, existing) ->
-                            Objects.isNull(existing) ? ratio : Math.min(existing, ratio));
+                            Objects.isNull(existing) ? ratio : Math.max(existing, ratio));
             return this;
         }
 
@@ -207,7 +240,7 @@ public class StatsCollector<T> {
             minimumRatioAssertions.compute(
                     "FALSE",
                     (key, existing) ->
-                            Objects.isNull(existing) ? ratio : Math.min(existing, ratio));
+                            Objects.isNull(existing) ? ratio : Math.max(existing, ratio));
             return this;
         }
 
