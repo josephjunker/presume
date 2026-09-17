@@ -62,11 +62,11 @@ public class IntegerGenerator extends AbstractGenerator<Integer> {
                         if (minimum >= 0) {
                             yield minimum + scale(magnitude, maximum - minimum);
                         } else if (maximum <= 0) {
-                            yield maximum - scale(magnitude, minimum - maximum);
+                            yield maximum - scale(magnitude, -(minimum - maximum));
                         } else if (sign) {
                             yield scale(magnitude, maximum);
                         } else {
-                            yield -scale(magnitude, minimum);
+                            yield -scale(magnitude, -minimum);
                         }
                     }
                     case Edge(int magnitude, boolean sign) -> {
