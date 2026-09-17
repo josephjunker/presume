@@ -31,11 +31,11 @@ public class IntegerGenerator extends AbstractGenerator<Integer>
         this.approaching = approaching;
     }
 
-    public IntegerGenerator withMinimum(int minimum) {
+    public IntegerGenerator withMinimumInclusive(int minimum) {
         return new IntegerGenerator(atomSupplier, minimum, maximum, approaching);
     }
 
-    public IntegerGenerator withMaximum(int maximum) {
+    public IntegerGenerator withMaximumExclusive(int maximum) {
         return new IntegerGenerator(atomSupplier, minimum, maximum, approaching);
     }
 
@@ -83,7 +83,7 @@ public class IntegerGenerator extends AbstractGenerator<Integer>
                     }
                 },
                 minimum,
-                maximum);
+                maximum - 1);
     }
 
     private int scale(int magnitude, int range) {

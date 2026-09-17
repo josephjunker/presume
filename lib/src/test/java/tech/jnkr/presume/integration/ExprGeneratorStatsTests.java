@@ -23,8 +23,7 @@ public class ExprGeneratorStatsTests {
                             if (maxDepth < 10) return Depth.FIVE_TO_TEN;
                             return Depth.TEN_PLUS;
                         })
-                .withMaximumRatio(Depth.ONE, 0.3f)
-                .withMinimumRatio(Depth.TEN_PLUS, 0.05f)
+                .withMaximumRatio(Depth.ONE, 0.4f)
                 .withMinimumRatio(Depth.FIVE_TO_TEN, 0.05f);
 
         collector

@@ -75,7 +75,7 @@ public class SourceAndTraceTests {
     public static class SampleGenerator5 extends AbstractGenerator<ImmutableList<Object>> {
         @Override
         protected ImmutableList<Object> gen(@NonNull GenerationSource drawer) {
-            int length = drawer.integerGen().withMinimum(0).withMaximum(10).gen(drawer);
+            int length = drawer.integerGen().withMinimumInclusive(0).withMaximumExclusive(10).gen(drawer);
             ImmutableList<Object> result = ImmutableList.empty();
 
             for (int i = 0; i < length; i++) {

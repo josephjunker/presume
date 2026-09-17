@@ -17,7 +17,7 @@ public interface GenerationSource {
     int getInteger();
 
     default int getInteger(int minimum, int maximum) {
-        return integerGen().withMinimum(minimum).withMaximum(maximum).gen(this);
+        return integerGen().withMinimumInclusive(minimum).withMaximumExclusive(maximum).gen(this);
     }
 
     IntegerGenerator integerGen();
@@ -79,7 +79,7 @@ public interface GenerationSource {
             throw new InvalidGeneratorException(
                     "Tried to call oneOf without providing any generators");
 
-        int index = getInteger(0, generators.size() - 1);
+        int index = getInteger(0, generators.size());
 
         return call(generators.get(index));
     }

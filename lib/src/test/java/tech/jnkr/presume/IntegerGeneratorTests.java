@@ -1,5 +1,6 @@
 package tech.jnkr.presume;
 
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
@@ -37,8 +38,8 @@ public class IntegerGeneratorTests {
     })
     public void shouldProduceBothOddAndEvenNumbers(int max, int min, int shrinkTowards) {
         IntegerGenerator gen = new IntegerGenerator(IntegerGeneratorTests::getRegular);
-        gen = gen.withMaximum(max);
-        gen = gen.withMinimum(min);
+        gen = gen.withMaximumExclusive(max);
+        gen = gen.withMinimumInclusive(min);
         if (shrinkTowards != 0) gen = gen.shrinkingTowards(shrinkTowards);
 
         StatsCollector<Integer> collector = new StatsCollector<>(gen);
@@ -79,8 +80,8 @@ public class IntegerGeneratorTests {
     })
     public void shouldProduceRelativelyEvenDistribution(int max, int min, int shrinkTowards) {
         IntegerGenerator gen = new IntegerGenerator(IntegerGeneratorTests::getRegular);
-        gen = gen.withMaximum(max);
-        gen = gen.withMinimum(min);
+        gen = gen.withMaximumExclusive(max);
+        gen = gen.withMinimumInclusive(min);
         if (shrinkTowards != 0) gen = gen.shrinkingTowards(shrinkTowards);
 
         StatsCollector<Integer> collector = new StatsCollector<>(gen);
@@ -91,6 +92,20 @@ public class IntegerGeneratorTests {
         }
 
         collector.summarize(100_000);
+    }
+
+    @Test
+    public void shouldProduceEdgeValuesWithReasonableFrequency() {
+        IntegerGenerator gen = new IntegerGenerator(IntegerGeneratorTests::getRegular);
+
+        IntegerGenerator zeroToFive = gen.withMinimumInclusive(0).withMaximumExclusive(5);
+        StatsCollector<Integer> zeroToFiveCollector = new StatsCollector<>(zeroToFive);
+        zeroToFiveCollector
+                .addExactIntegerBucket("value", 0, 6, x -> x)
+                .withMinimumRatio(4, 0.1f)
+                .withMaximumRatio(5, 0);
+
+        zeroToFiveCollector.summarize(10_000);
     }
 
     public static DrawAtom getRegular() {

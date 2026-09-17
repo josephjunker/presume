@@ -40,6 +40,15 @@ public class StatsCollector<T> {
         return result;
     }
 
+    public ExactIntegerBucketer<T> addExactIntegerBucket(
+            String title, int min, int max, Function<T, Integer> discriminator) {
+        ExactIntegerBucketer<T> result = new ExactIntegerBucketer<>(title, min, max, discriminator);
+
+        bucketers.add(result);
+
+        return result;
+    }
+
     public void summarize(int runCount) {
         for (int i = 0; i < runCount; i++) {
             T value = generator.internalGen(new PureSource());
@@ -55,7 +64,7 @@ public class StatsCollector<T> {
     private record BucketWithCount(String name, int count) {}
 
     private abstract static sealed class BaseBucketer<T>
-            permits BooleanBucketer, EnumBucketer, IntegerBucketer {
+            permits BooleanBucketer, EnumBucketer, IntegerBucketer, ExactIntegerBucketer {
         protected abstract void consume(T input);
 
         abstract List<BucketWithCount> getBucketCounts();
@@ -182,7 +191,7 @@ public class StatsCollector<T> {
         @Override
         List<BucketWithCount> getBucketCounts() {
             ArrayList<BucketWithCount> result = new ArrayList<>();
-            for (int i = 0; i < bucketCount; i++) {
+            for (int i = bucketCount - 1; i >= 0; i--) {
                 String bucketName = getBucketName(i);
                 result.add(new BucketWithCount(bucketName, counts.getOrDefault(bucketName, 0)));
             }
@@ -192,8 +201,79 @@ public class StatsCollector<T> {
         @Override
         protected List<String> getBucketNames() {
             ArrayList<String> result = new ArrayList<>();
-            for (int i = bucketCount - 1; i >= 0; i--) {
+            for (int i = 0; i < bucketCount; i++) {
                 result.add(getBucketName(i));
+            }
+            return result;
+        }
+
+        @Override
+        protected int getCountForBucket(String name) {
+            return counts.getOrDefault(name, 0);
+        }
+
+        @Override
+        protected String getTitle() {
+            return title;
+        }
+    }
+
+    public static final class ExactIntegerBucketer<T> extends BaseBucketer<T> {
+        private final String title;
+        private final int min;
+        private final int max;
+        private final HashMap<String, Integer> counts;
+        private final Function<T, Integer> discriminator;
+
+        private ExactIntegerBucketer(
+                String title, int min, int max, Function<T, Integer> discriminator) {
+            super();
+            this.title = title;
+            this.min = min;
+            this.max = max;
+            this.discriminator = discriminator;
+
+            counts = new HashMap<>();
+        }
+
+        public ExactIntegerBucketer<T> withMinimumRatio(int index, float ratio) {
+            minimumRatioAssertions.compute(
+                    Integer.toString(index),
+                    (key, existing) ->
+                            Objects.isNull(existing) ? ratio : Math.max(existing, ratio));
+            return this;
+        }
+
+        public ExactIntegerBucketer<T> withMaximumRatio(int index, float ratio) {
+            maximumRatioAssertions.compute(
+                    Integer.toString(index),
+                    (key, existing) ->
+                            Objects.isNull(existing) ? ratio : Math.min(existing, ratio));
+            return this;
+        }
+
+        @Override
+        protected void consume(T input) {
+            counts.compute(
+                    Integer.toString(discriminator.apply(input)),
+                    (name, value) -> Objects.isNull(value) ? 1 : value + 1);
+        }
+
+        @Override
+        List<BucketWithCount> getBucketCounts() {
+            ArrayList<BucketWithCount> result = new ArrayList<>();
+            for (int i = 0; i <= max; i++) {
+                String bucketName = Integer.toString(i);
+                result.add(new BucketWithCount(bucketName, counts.getOrDefault(bucketName, 0)));
+            }
+            return result;
+        }
+
+        @Override
+        protected List<String> getBucketNames() {
+            ArrayList<String> result = new ArrayList<>();
+            for (int i = 0; i < max; i++) {
+                result.add(Integer.toString(i));
             }
             return result;
         }
