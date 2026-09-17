@@ -25,7 +25,7 @@ public interface GenerationSource {
     long getLong();
 
     default long getLong(long minimum, long maximum) {
-        return longGen().withMinimum(minimum).withMaximum(maximum).genPrimitive();
+        return longGen().withMinimumInclusive(minimum).withMaximumExclusive(maximum).genPrimitive();
     }
 
     LongGenerator longGen();

@@ -14,7 +14,7 @@ public class LongGenerator extends AbstractGenerator<Long> implements PrimitiveG
     private static final int oneThirdMaxInt = Integer.MAX_VALUE / 3;
     private static final int twoThirdsMaxInt = oneThirdMaxInt * 2;
 
-    public LongGenerator(Supplier<DrawAtom> atomSupplier) {
+    LongGenerator(Supplier<DrawAtom> atomSupplier) {
         this.atomSupplier = atomSupplier;
         minimum = Long.MIN_VALUE;
         maximum = Long.MAX_VALUE;
@@ -29,11 +29,11 @@ public class LongGenerator extends AbstractGenerator<Long> implements PrimitiveG
         this.approaching = approaching;
     }
 
-    public LongGenerator withMinimum(long minimum) {
+    public LongGenerator withMinimumInclusive(long minimum) {
         return new LongGenerator(atomSupplier, minimum, maximum, approaching);
     }
 
-    public LongGenerator withMaximum(long maximum) {
+    public LongGenerator withMaximumExclusive(long maximum) {
         return new LongGenerator(atomSupplier, minimum, maximum, approaching);
     }
 
@@ -81,7 +81,7 @@ public class LongGenerator extends AbstractGenerator<Long> implements PrimitiveG
                     }
                 },
                 minimum,
-                maximum);
+                maximum - 1);
     }
 
     @Override
