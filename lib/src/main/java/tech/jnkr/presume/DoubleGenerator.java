@@ -5,7 +5,7 @@ import tech.jnkr.presume.internal.atoms.*;
 
 import java.util.function.Supplier;
 
-public class DoubleGenerator extends AbstractGenerator<Double> {
+public class DoubleGenerator extends AbstractGenerator<Double> implements PrimitiveGenerator<Double> {
     private final double minimum;
     private final double maximum;
     private final double approaching;
@@ -80,7 +80,8 @@ public class DoubleGenerator extends AbstractGenerator<Double> {
         return new DoubleGenerator(atomSupplier, minimum, maximum, approaching, allowNaN, false);
     }
 
-    public Double gen() {
+    @Override
+    public Double genPrimitive() {
         return produce(atomSupplier.get(), atomSupplier.get(), atomSupplier.get());
     }
 

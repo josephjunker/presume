@@ -25,7 +25,7 @@ public interface GenerationSource {
     long getLong();
 
     default long getLong(long minimum, long maximum) {
-        return longGen().withMinimum(minimum).withMaximum(maximum).gen();
+        return longGen().withMinimum(minimum).withMaximum(maximum).genPrimitive();
     }
 
     LongGenerator longGen();
@@ -33,11 +33,11 @@ public interface GenerationSource {
     float getFloat();
 
     default float getFloat(float minimum, float maximum) {
-        return floatGen().withMinimum(minimum).withMaximum(maximum).gen();
+        return floatGen().withMinimum(minimum).withMaximum(maximum).genPrimitive();
     }
 
     default float getBoringFloat() {
-        return floatGen().disallowNaN().disallowInfinity().gen();
+        return floatGen().disallowNaN().disallowInfinity().genPrimitive();
     }
 
     default float getBoringFloat(float minimum, float maximum) {
@@ -46,7 +46,7 @@ public interface GenerationSource {
                 .withMaximum(maximum)
                 .disallowNaN()
                 .disallowInfinity()
-                .gen();
+                .genPrimitive();
     }
 
     FloatGenerator floatGen();
@@ -54,11 +54,11 @@ public interface GenerationSource {
     double getDouble();
 
     default double getDouble(double minimum, double maximum) {
-        return doubleGen().withMinimum(minimum).withMaximum(maximum).gen();
+        return doubleGen().withMinimum(minimum).withMaximum(maximum).genPrimitive();
     }
 
     default double getBoringDouble() {
-        return doubleGen().disallowNaN().disallowInfinity().gen();
+        return doubleGen().disallowNaN().disallowInfinity().genPrimitive();
     }
 
     default double getBoringDouble(double minimum, double maximum) {
@@ -67,7 +67,7 @@ public interface GenerationSource {
                 .withMaximum(maximum)
                 .disallowNaN()
                 .disallowInfinity()
-                .gen();
+                .genPrimitive();
     }
 
     DoubleGenerator doubleGen();

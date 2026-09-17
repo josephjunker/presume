@@ -5,7 +5,7 @@ import tech.jnkr.presume.internal.atoms.*;
 
 import java.util.function.Supplier;
 
-public class FloatGenerator extends AbstractGenerator<Float> {
+public class FloatGenerator extends AbstractGenerator<Float> implements PrimitiveGenerator<Float> {
     private final float minimum;
     private final float maximum;
     private final float approaching;
@@ -79,7 +79,8 @@ public class FloatGenerator extends AbstractGenerator<Float> {
         return new FloatGenerator(atomSupplier, minimum, maximum, approaching, allowNaN, false);
     }
 
-    public Float gen() {
+    @Override
+    public Float genPrimitive() {
         return produce(atomSupplier.get(), atomSupplier.get());
     }
 

@@ -5,7 +5,8 @@ import tech.jnkr.presume.internal.atoms.*;
 
 import java.util.function.Supplier;
 
-public class IntegerGenerator extends AbstractGenerator<Integer> {
+public class IntegerGenerator extends AbstractGenerator<Integer>
+        implements PrimitiveGenerator<Integer> {
 
     private final int minimum;
     private final int maximum;
@@ -44,6 +45,11 @@ public class IntegerGenerator extends AbstractGenerator<Integer> {
 
     @Override
     protected Integer gen(GenerationSource source) {
+        return produce(atomSupplier.get());
+    }
+
+    @Override
+    public Integer genPrimitive() {
         return produce(atomSupplier.get());
     }
 

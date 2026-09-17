@@ -5,7 +5,7 @@ import tech.jnkr.presume.internal.atoms.*;
 
 import java.util.function.Supplier;
 
-public class LongGenerator extends AbstractGenerator<Long> {
+public class LongGenerator extends AbstractGenerator<Long> implements PrimitiveGenerator<Long> {
     private final long minimum;
     private final long maximum;
     private final long approaching;
@@ -39,10 +39,6 @@ public class LongGenerator extends AbstractGenerator<Long> {
 
     public LongGenerator shrinkingTowards(long target) {
         return new LongGenerator(atomSupplier, minimum, maximum, target);
-    }
-
-    public Long gen() {
-        return produce(atomSupplier.get(), atomSupplier.get());
     }
 
     private Long produce(DrawAtom atom1, DrawAtom atom2) {
@@ -90,6 +86,11 @@ public class LongGenerator extends AbstractGenerator<Long> {
 
     @Override
     protected Long gen(GenerationSource source) {
+        return produce(atomSupplier.get(), atomSupplier.get());
+    }
+
+    @Override
+    public Long genPrimitive() {
         return produce(atomSupplier.get(), atomSupplier.get());
     }
 }

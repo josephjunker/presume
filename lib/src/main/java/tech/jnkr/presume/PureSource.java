@@ -38,7 +38,7 @@ class PureSource implements GenerationSource {
     }
 
     public long getLong() {
-        return longGenerator.gen();
+        return longGenerator.genPrimitive();
     }
 
     public LongGenerator longGen() {
@@ -46,7 +46,7 @@ class PureSource implements GenerationSource {
     }
 
     public float getFloat() {
-        return floatGenerator.gen();
+        return floatGenerator.genPrimitive();
     }
 
     public FloatGenerator floatGen() {
@@ -54,7 +54,7 @@ class PureSource implements GenerationSource {
     }
 
     public double getDouble() {
-        return doubleGenerator.gen();
+        return doubleGenerator.genPrimitive();
     }
 
     public DoubleGenerator doubleGen() {

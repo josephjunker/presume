@@ -10,18 +10,22 @@ public class ExprGeneratorStatsTests {
         ExprGenerator generator = new ExprGenerator();
         StatsCollector<Expr> collector = new StatsCollector<>(generator);
 
-        collector.addEnumBucket(
-                Depth.class,
-                "Max depth",
-                expr -> {
-                    int maxDepth = ExprOperations.maxDepth(expr);
+        collector
+                .addEnumBucket(
+                        Depth.class,
+                        "Max depth",
+                        expr -> {
+                            int maxDepth = ExprOperations.maxDepth(expr);
 
-                    if (maxDepth == 1) return Depth.ONE;
-                    if (maxDepth == 2) return Depth.TWO;
-                    if (maxDepth < 5) return Depth.TWO_TO_FIVE;
-                    if (maxDepth < 10) return Depth.FIVE_TO_TEN;
-                    return Depth.TEN_PLUS;
-                });
+                            if (maxDepth == 1) return Depth.ONE;
+                            if (maxDepth == 2) return Depth.TWO;
+                            if (maxDepth < 5) return Depth.TWO_TO_FIVE;
+                            if (maxDepth < 10) return Depth.FIVE_TO_TEN;
+                            return Depth.TEN_PLUS;
+                        })
+                .withMaximumRatio(Depth.ONE, 0.3f)
+                .withMinimumRatio(Depth.TEN_PLUS, 0.05f)
+                .withMinimumRatio(Depth.FIVE_TO_TEN, 0.05f);
 
         collector
                 .addBooleanBucket("Contains Add", ExprOperations::containsAdd)

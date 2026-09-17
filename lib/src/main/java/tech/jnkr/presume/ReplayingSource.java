@@ -73,7 +73,7 @@ class ReplayingSource implements GenerationSource {
 
     @Override
     public long getLong() {
-        return longGenerator.gen();
+        return longGenerator.genPrimitive();
     }
 
     @Override
@@ -83,7 +83,7 @@ class ReplayingSource implements GenerationSource {
 
     @Override
     public float getFloat() {
-        return floatGenerator.gen();
+        return floatGenerator.genPrimitive();
     }
 
     @Override
@@ -93,7 +93,7 @@ class ReplayingSource implements GenerationSource {
 
     @Override
     public double getDouble() {
-        return doubleGenerator.gen();
+        return doubleGenerator.genPrimitive();
     }
 
     @Override
