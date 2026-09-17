@@ -14,6 +14,9 @@ public class LongGenerator extends AbstractGenerator<Long> implements PrimitiveG
     private static final int oneThirdMaxInt = Integer.MAX_VALUE / 3;
     private static final int twoThirdsMaxInt = oneThirdMaxInt * 2;
 
+    // The concatenation of two non-negative int magnitudes spans [0, 2^62).
+    private static final double UNSIGNED_MAGNITUDE_RANGE = (double) (1L << 62);
+
     LongGenerator(Supplier<DrawAtom> atomSupplier) {
         this.atomSupplier = atomSupplier;
         minimum = Long.MIN_VALUE;
@@ -51,37 +54,42 @@ public class LongGenerator extends AbstractGenerator<Long> implements PrimitiveG
 
         return Math.clamp(
                 switch (atom1) {
-                    case Trivial1() -> 0;
-                    case Trivial2() -> 1;
-                    case Regular(int magnitude, boolean sign, boolean simplify) ->
+                    case Trivial1(), Trivial2() -> approaching;
+                    case Regular(int magnitude, boolean sign, _) ->
                             switch (atom2) {
                                 case Trivial1(), Trivial2() -> sign ? magnitude : -magnitude;
                                 case Regular(int secondMagnitude, _, _) -> {
-                                    long unscaled = magnitude;
-                                    unscaled = unscaled << 31;
-                                    unscaled = unscaled | secondMagnitude;
+                                    long unscaled = ((long) magnitude << 31) | secondMagnitude;
 
-                                    // TODO: this logic is wrong, I'm not accounting for the sign
-                                    // bit. Also this should scale positive and negative ranges
-                                    // independently, like the integer generator does.
-
-                                    double range = maximum - minimum;
-                                    double ratio = range / Long.MAX_VALUE;
-                                    long result = (long) ((double) unscaled * ratio) + minimum;
-
-                                    yield sign ? Math.abs(result) : -Math.abs(result);
+                                    if (minimum >= 0) {
+                                        yield minimum + scale(unscaled, maximum - minimum);
+                                    } else if (maximum <= 0) {
+                                        yield maximum
+                                                - scale(
+                                                        unscaled,
+                                                        (double) maximum - (double) minimum);
+                                    } else if (sign) {
+                                        yield scale(unscaled, maximum);
+                                    } else {
+                                        yield -scale(unscaled, -(double) minimum);
+                                    }
                                 }
                                 case Edge(_, _) -> sign ? magnitude : -magnitude;
                             };
                     case Edge(int magnitude, boolean sign) -> {
                         if (magnitude < oneThirdMaxInt) yield approaching;
-                        if (magnitude > twoThirdsMaxInt)
+                        if (magnitude < twoThirdsMaxInt)
                             yield sign ? approaching - 1 : approaching + 1;
                         yield sign ? minimum : maximum;
                     }
                 },
                 minimum,
                 maximum - 1);
+    }
+
+    private long scale(long magnitude, double range) {
+        double ratio = (double) magnitude / UNSIGNED_MAGNITUDE_RANGE;
+        return (long) (ratio * range);
     }
 
     @Override

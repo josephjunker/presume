@@ -7,7 +7,8 @@ import tech.jnkr.presume.internal.atoms.Trivial2;
 
 import java.util.function.Supplier;
 
-public class BooleanGenerator extends AbstractGenerator<Boolean> implements PrimitiveGenerator<Boolean> {
+public class BooleanGenerator extends AbstractGenerator<Boolean>
+        implements PrimitiveGenerator<Boolean> {
     private final Supplier<DrawAtom> atomSupplier;
     private final boolean shrinkTarget;
     private static int cutoff = Integer.MAX_VALUE / 2;
