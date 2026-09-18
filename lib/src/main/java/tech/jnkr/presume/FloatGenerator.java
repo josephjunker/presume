@@ -18,11 +18,6 @@ public class FloatGenerator extends AbstractGenerator<Float> implements Primitiv
     private static final int threeFifthsMaxInt = oneFifthMaxInt * 3;
     private static final int fourFifthsMaxInt = oneFifthMaxInt * 4;
 
-    private static final int mantissaRange = 2 ^ 23;
-    private static final float mantissaMaxIntRatio = (float) mantissaRange / Integer.MAX_VALUE;
-    private static final int exponentRange = 2 ^ 8;
-    private static final float exponentMaxIntRatio = (float) exponentRange / Integer.MAX_VALUE;
-
     FloatGenerator(Supplier<DrawAtom> atomSupplier) {
         this.atomSupplier = atomSupplier;
         minimum = -Float.MAX_VALUE / 2f;
@@ -94,8 +89,7 @@ public class FloatGenerator extends AbstractGenerator<Float> implements Primitiv
 
         float result =
                 switch (atom1) {
-                    case Trivial1() -> 0f;
-                    case Trivial2() -> 1f;
+                    case Trivial1(), Trivial2() -> approaching;
                     case Regular(int magnitude, boolean sign, boolean simplify) ->
                             generateFromSecondAtom(magnitude, atom2, sign, simplify);
                     case Edge(int magnitude, boolean sign) -> {
@@ -120,11 +114,13 @@ public class FloatGenerator extends AbstractGenerator<Float> implements Primitiv
     }
 
     private int magnitudeToMantissa(int magnitude) {
-        return (int) ((float) magnitude * mantissaMaxIntRatio);
+        // The high 23 bits of the 31-bit magnitude.
+        return magnitude >>> 8;
     }
 
     private int magnitudeToExponent(int magnitude) {
-        return ((int) ((float) magnitude * exponentMaxIntRatio)) + 127;
+        // Uniform over the raw biased exponent field, excluding 255 (infinity/NaN).
+        return (int) ((magnitude * 255L) >>> 31);
     }
 
     private int signToInt(boolean sign) {
@@ -159,10 +155,11 @@ public class FloatGenerator extends AbstractGenerator<Float> implements Primitiv
 
     private float generateFromMagnitudes(
             int magnitude1, int magnitude2, boolean sign, boolean simplify) {
-        boolean effectiveSign = (minimum >= 0) || sign;
-        if (maximum <= 0) effectiveSign = false;
+        boolean negative = !sign;
+        if (minimum >= 0) negative = false;
+        if (maximum <= 0) negative = true;
 
-        int signInt = signToInt(effectiveSign);
+        int signInt = signToInt(negative);
         int exponentInt = magnitudeToExponent(magnitude1);
         int mantissaInt = magnitudeToMantissa(magnitude2);
 

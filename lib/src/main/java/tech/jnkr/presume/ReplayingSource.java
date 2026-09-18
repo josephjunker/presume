@@ -36,6 +36,15 @@ class ReplayingSource implements GenerationSource {
         this.trace = new MutableRoseTree<>(new ArrayList<>());
     }
 
+    private ReplayingSource(
+            MutableRoseTree<ArrayList<TraceEntry>> trace,
+            Maybe<ListZipper<DrawAtom>> atomCursor,
+            Maybe<ListZipper<RoseTree<ArrayList<DrawAtom>>>> childCursor) {
+        this.trace = trace;
+        this.atomCursor = atomCursor;
+        this.childCursor = childCursor;
+    }
+
     private DrawAtom getAtom() {
         return switch (atomCursor) {
             case Nothing():

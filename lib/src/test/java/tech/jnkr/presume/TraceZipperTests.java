@@ -2,6 +2,7 @@ package tech.jnkr.presume;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -36,7 +37,7 @@ public class TraceZipperTests {
 
     public static class Generator1 extends AbstractGenerator<TestTraceStructure1> {
         @Override
-        protected TestTraceStructure1 gen(GenerationSource source) {
+        protected TestTraceStructure1 gen(@NonNull GenerationSource source) {
             TestTraceStructure3 firstSub = source.call(new Generator3());
             int x1 = source.getInteger();
             TestTraceStructure2 secondSub = source.call(new Generator2());
@@ -51,7 +52,7 @@ public class TraceZipperTests {
 
     public static class Generator2 extends AbstractGenerator<TestTraceStructure2> {
         @Override
-        protected TestTraceStructure2 gen(GenerationSource source) {
+        protected TestTraceStructure2 gen(@NonNull GenerationSource source) {
             int x1 = source.getInteger();
             int x2 = source.getInteger();
             TestTraceStructure3 sub1 = source.call(new Generator3());
@@ -64,7 +65,7 @@ public class TraceZipperTests {
 
     public static class Generator3 extends AbstractGenerator<TestTraceStructure3> {
         @Override
-        protected TestTraceStructure3 gen(GenerationSource source) {
+        protected TestTraceStructure3 gen(@NonNull GenerationSource source) {
             int x1 = source.getInteger();
             source.call(new Generator4());
             int x2 = source.getInteger();
@@ -76,14 +77,14 @@ public class TraceZipperTests {
 
     public static class Generator4 extends AbstractGenerator<Boolean> {
         @Override
-        protected Boolean gen(GenerationSource source) {
+        protected Boolean gen(@NonNull GenerationSource source) {
             return true;
         }
     }
 
     public static class Generator5 extends AbstractGenerator<Boolean> {
         @Override
-        protected Boolean gen(GenerationSource source) {
+        protected Boolean gen(@NonNull GenerationSource source) {
             source.call(new Generator4());
             return true;
         }

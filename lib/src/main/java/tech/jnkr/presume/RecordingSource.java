@@ -10,9 +10,9 @@ import java.util.List;
 
 class RecordingSource implements GenerationSource {
 
-    private final AtomSource atomSource = new AtomSource();
-    private final List<DrawAtom> history = new ArrayList<>();
-    private final List<RecordingSource> children = new ArrayList<>();
+    private final AtomSource atomSource;
+    private final List<DrawAtom> history;
+    private final List<RecordingSource> children;
 
     private final BooleanGenerator booleanGenerator;
     private final IntegerGenerator integerGenerator;
@@ -21,6 +21,23 @@ class RecordingSource implements GenerationSource {
     private final DoubleGenerator doubleGenerator;
 
     public RecordingSource() {
+        atomSource = new AtomSource();
+        history = new ArrayList<>();
+        children = new ArrayList<>();
+
+        booleanGenerator = new BooleanGenerator(this::getAtom);
+        integerGenerator = new IntegerGenerator(this::getAtom);
+        longGenerator = new LongGenerator(this::getAtom);
+        floatGenerator = new FloatGenerator(this::getAtom);
+        doubleGenerator = new DoubleGenerator(this::getAtom);
+    }
+
+    private RecordingSource(
+            AtomSource atomSource, List<DrawAtom> history, List<RecordingSource> children) {
+        this.atomSource = atomSource;
+        this.history = history;
+        this.children = children;
+
         booleanGenerator = new BooleanGenerator(this::getAtom);
         integerGenerator = new IntegerGenerator(this::getAtom);
         longGenerator = new LongGenerator(this::getAtom);

@@ -19,11 +19,6 @@ public class DoubleGenerator extends AbstractGenerator<Double>
     private static final int threeFifthsMaxInt = oneFifthMaxInt * 3;
     private static final int fourFifthsMaxInt = oneFifthMaxInt * 4;
 
-    private static final long mantissaRange = 2 ^ 52;
-    private static final double mantissaMaxLongRatio = (double) mantissaRange / Long.MAX_VALUE;
-    private static final int exponentRange = 2 ^ 8;
-    private static final double exponentMaxIntRatio = (double) exponentRange / Integer.MAX_VALUE;
-
     DoubleGenerator(Supplier<DrawAtom> atomSupplier) {
         this.atomSupplier = atomSupplier;
         minimum = -Double.MAX_VALUE;
@@ -96,8 +91,7 @@ public class DoubleGenerator extends AbstractGenerator<Double>
 
         double result =
                 switch (atom1) {
-                    case Trivial1() -> 0;
-                    case Trivial2() -> 1;
+                    case Trivial1(), Trivial2() -> approaching;
                     case Regular(int magnitude, boolean sign, boolean simplify) ->
                             generateFromMantissaAtoms(magnitude, atom2, atom3, sign, simplify);
                     case Edge(int magnitude, boolean sign) -> {
@@ -110,11 +104,11 @@ public class DoubleGenerator extends AbstractGenerator<Double>
                             if (!allowInfinity)
                                 yield generateFromMantissaAtoms(
                                         magnitude, atom2, atom3, sign, false);
-                            yield sign ? Float.POSITIVE_INFINITY : Float.NEGATIVE_INFINITY;
+                            yield sign ? Double.POSITIVE_INFINITY : Double.NEGATIVE_INFINITY;
                         }
-                        if (allowNaN) yield Float.NaN;
+                        if (allowNaN) yield Double.NaN;
                         if (allowInfinity)
-                            yield sign ? Float.POSITIVE_INFINITY : Float.NEGATIVE_INFINITY;
+                            yield sign ? Double.POSITIVE_INFINITY : Double.NEGATIVE_INFINITY;
                         yield generateFromMantissaAtoms(magnitude, atom2, atom3, sign, false);
                     }
                 };
@@ -126,29 +120,32 @@ public class DoubleGenerator extends AbstractGenerator<Double>
     private double generateFromMantissaAtoms(
             int exponentMagnitude, DrawAtom atom2, DrawAtom atom3, boolean sign, boolean simplify) {
 
-        boolean effectiveSign = (minimum >= 0) || sign;
-        if (maximum <= 0) effectiveSign = false;
+        boolean negative = !sign;
+        if (minimum >= 0) negative = false;
+        if (maximum <= 0) negative = true;
 
-        long signLong = effectiveSign ? 1 : 0;
-        long exponent = (long) (exponentMagnitude * exponentMaxIntRatio) + 1023;
+        long signLong = negative ? 1 : 0;
+        // Uniform over the raw biased exponent field, excluding 2047 (infinity/NaN).
+        long exponent = (exponentMagnitude * 2047L) >>> 31;
         long mantissa = getMantissa(atom2, atom3);
 
         long bits = signLong << 63;
         bits |= exponent << 52;
         bits |= mantissa;
 
-        return Double.longBitsToDouble(bits);
+        double result = Double.longBitsToDouble(bits);
+        if (simplify) return (double) (long) result;
+        return result;
     }
 
     private long getMantissa(DrawAtom atom2, DrawAtom atom3) {
-        int prefix = atomToInt(atom2);
-        int suffix = atomToInt(atom3);
+        long prefix = atomToInt(atom2);
+        long suffix = atomToInt(atom3);
 
-        long unscaled = prefix;
-        unscaled = unscaled << 32;
-        unscaled = unscaled & suffix;
+        long unscaled = (prefix << 32) | suffix;
 
-        return (long) (((double) unscaled) * mantissaMaxLongRatio);
+        // The high 52 bits of the 63-bit concatenation.
+        return unscaled >>> 11;
     }
 
     private int atomToInt(DrawAtom atom) {
