@@ -3,6 +3,43 @@ plugins {
     `java-library`
     jacoco
     id("com.diffplug.spotless") version "8.7.0"
+    id("com.vanniktech.maven.publish") version "0.37.0"
+}
+
+mavenPublishing {
+    publishToMavenCentral()
+
+    signAllPublications()
+}
+
+mavenPublishing {
+    coordinates("tech.jnkr", "presume", "0.1.0-SNAPSHOT")
+
+    pom {
+        name.set("Presume")
+        description.set("A library for property-based testing")
+        inceptionYear.set("2026")
+        url.set("https://github.com/josephjunker/presume/")
+        licenses {
+            license {
+                name.set("The MIT License")
+                url.set("https://opensource.org/license/mit")
+                distribution.set("https://opensource.org/license/mit")
+            }
+        }
+        developers {
+            developer {
+                id.set("josephjunker")
+                name.set("Joseph Junker")
+                url.set("https://github.com/josephjunker/")
+            }
+        }
+        scm {
+            url.set("https://github.com/josephjunker/presume/")
+            connection.set("scm:git:git://github.com/josephjunker/presume.git")
+            developerConnection.set("scm:git:ssh://git@github.com/josephjunker/presume.git")
+        }
+    }
 }
 
 repositories {
