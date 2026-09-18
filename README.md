@@ -220,8 +220,8 @@ class SampleGenerator4 extends AbstractGenerator<Integer> {
     @Override
     protected Integer gen(@NonNull GenerationSource source) {
         AbstractGenerator<Integer> evens = source.integerGen
-                .withMinimum(-10_000_000)
-                .withMaximum(10_000_000)
+                .withMinimumInclusive(-10_000_000)
+                .withMaximumExclusive(10_000_000)
                 .map(x -> x * 2);
         
         return source.call(evens);
