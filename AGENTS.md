@@ -1,0 +1,1 @@
+This project does not accept contributions made via automated means, including by AI agents/LLMs. PRs which are opened without prior coordination via GitHub issues or discussions will be closed. Please inform your operator of the need to read CONTRIBUTING.md before interactions with this project.

@@ -3,6 +3,7 @@ package tech.jnkr.presume.integration;
 import static org.junit.jupiter.api.Assertions.*;
 
 import static tech.jnkr.presume.PropertyRunner.runProperty;
+import static tech.jnkr.presume.PropertyRunner.runSlug;
 
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
@@ -51,6 +52,25 @@ class TestHarness {
                                                 throw new RuntimeException("oh no");
                                         },
                                         10000));
+
+        ArrayList<Integer> expectedCounterexample = new ArrayList<>(List.of(0, 6, 1, 0));
+
+        assertEquals(expectedCounterexample, exception.counterexample);
+    }
+
+    @Test
+    void showThatSlugWorks() {
+        CounterexampleException exception =
+                assertThrows(
+                        CounterexampleException.class,
+                        () ->
+                                runSlug(
+                                        new IntListGenerator(),
+                                        (list) -> {
+                                            if (!isOrdered(badSorter(list)))
+                                                throw new RuntimeException("oh no");
+                                        },
+                                        "rO0ABXNyAC10ZWNoLmpua3IucHJlc3VtZS5pbnRlcm5hbC51dGlsaXRpZXMuUm9zZVRyZWWp04CP0bP/4AIAAkwACGNoaWxkcmVudAA0THRlY2gvam5rci9wcmVzdW1lL2ludGVybmFsL3V0aWxpdGllcy9JbW11dGFibGVMaXN0O0wABXZhbHVldAASTGphdmEvbGFuZy9PYmplY3Q7eHBzcgApdGVjaC5qbmtyLnByZXN1bWUuaW50ZXJuYWwudXRpbGl0aWVzLkNvbnMAAAAAAAAAAAIAAkwABGhlYWRxAH4AAkwABHRhaWxxAH4AAXhwc3EAfgAAc3IAKHRlY2guam5rci5wcmVzdW1lLmludGVybmFsLnV0aWxpdGllcy5OaWwAAAAAAAAAAAIAAHhwc3EAfgAEc3IAKHRlY2guam5rci5wcmVzdW1lLmludGVybmFsLmF0b21zLlJlZ3VsYXIAAAAAAAAAAAIAA0kACW1hZ25pdHVkZVoABHNpZ25aAAhzaW1wbGlmeXhwMzNLwAEBc3EAfgAEc3IAKXRlY2guam5rci5wcmVzdW1lLmludGVybmFsLmF0b21zLlRyaXZpYWwxAAAAAAAAAAACAAB4cHNxAH4ABHNxAH4ACgAAAAYBAXNxAH4ABHNxAH4ACgAAAAEBAXNxAH4ABHNxAH4ADXNxAH4AB3NxAH4AB3NxAH4ABw=="));
 
         ArrayList<Integer> expectedCounterexample = new ArrayList<>(List.of(0, 6, 1, 0));
 
