@@ -6,6 +6,16 @@ An introduction to the basic ideas behind property-based testing [lives here](/d
 
 Presume is a work-in-progress. Its core functionality of data generation, shrinking, and test reproduction is stable, but it lacks some convenience functions which are present in more comprehensive libraries. This is hopefully a temporary state of affairs; as of September 2026 this library is still under active development.
 
+## Installation
+
+```xml
+<dependency>
+    <groupId>tech.jnkr</groupId>
+    <artifactId>presume</artifactId>
+    <version>0.1.0</version>
+</dependency>
+```
+
 ## Defining tests
 
 Running a presume test requires providing a generator for test data, and an assertion function which throws when the test should fail. For example, here is a test asserting that a sorting algorithm works when given an array of integers, written using the JUnit testing framework:

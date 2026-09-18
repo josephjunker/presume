@@ -13,7 +13,7 @@ mavenPublishing {
 }
 
 mavenPublishing {
-    coordinates("tech.jnkr", "presume", "0.1.0-SNAPSHOT")
+    coordinates("tech.jnkr", "presume", "0.1.0")
 
     pom {
         name.set("Presume")
@@ -29,7 +29,7 @@ mavenPublishing {
         }
         developers {
             developer {
-                id.set("josephjunker")
+                id.set("josephsoftwarequalityjunker@gmail.com")
                 name.set("Joseph Junker")
                 url.set("https://github.com/josephjunker/")
             }
