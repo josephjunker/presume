@@ -89,7 +89,8 @@ public class FloatGenerator extends AbstractGenerator<Float> implements Primitiv
 
         float result =
                 switch (atom1) {
-                    case Trivial1(), Trivial2() -> approaching;
+                    case Trivial1 ignoredT1 -> approaching;
+                    case Trivial2 ignoredT2 -> approaching;
                     case Regular(int magnitude, boolean sign, boolean simplify) ->
                             generateFromSecondAtom(magnitude, atom2, sign, simplify);
                     case Edge(int magnitude, boolean sign) -> {
@@ -130,8 +131,8 @@ public class FloatGenerator extends AbstractGenerator<Float> implements Primitiv
     private float generateFromSecondAtom(
             int firstMagnitude, DrawAtom secondAtom, boolean sign, boolean simplify) {
         return switch (secondAtom) {
-            case Trivial1() -> 0f;
-            case Trivial2() -> 1f;
+            case Trivial1 ignored -> 0f;
+            case Trivial2 ignored -> 1f;
             case Regular(int secondMagnitude, boolean secondSign, boolean secondSimplify) ->
                     generateFromMagnitudes(firstMagnitude, secondMagnitude, sign, simplify);
             case Edge(int secondMagnitude, boolean sign1) -> {

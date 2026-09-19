@@ -20,7 +20,7 @@ public class ExprOperations {
 
     public static int maxDepth(Expr expr) {
         return switch (expr) {
-            case Expr.Lit(_) -> 1;
+            case Expr.Lit(int ignoredX) -> 1;
             case Expr.Add(Expr left, Expr right) -> Math.max(maxDepth(left), maxDepth(right)) + 1;
             case Expr.Mul(Expr left, Expr right) -> Math.max(maxDepth(left), maxDepth(right)) + 1;
             case Expr.Neg(Expr inner) -> maxDepth(inner) + 1;
@@ -29,8 +29,8 @@ public class ExprOperations {
 
     public static boolean containsAdd(Expr expr) {
         return switch (expr) {
-            case Expr.Lit(_) -> false;
-            case Expr.Add(_, _) -> true;
+            case Expr.Lit(int ignoredX) -> false;
+            case Expr.Add(Expr ignoredLeft, Expr ignoredRight) -> true;
             case Expr.Mul(Expr left, Expr right) -> containsAdd(left) || containsAdd(right);
             case Expr.Neg(Expr inner) -> containsAdd(inner);
         };
@@ -38,19 +38,19 @@ public class ExprOperations {
 
     public static boolean containsMul(Expr expr) {
         return switch (expr) {
-            case Expr.Lit(_) -> false;
+            case Expr.Lit(int ignoredX) -> false;
             case Expr.Add(Expr left, Expr right) -> containsMul(left) || containsMul(right);
-            case Expr.Mul(_, _) -> true;
+            case Expr.Mul(Expr ignoredLeft, Expr ignoredRight) -> true;
             case Expr.Neg(Expr inner) -> containsMul(inner);
         };
     }
 
     public static boolean containsNeg(Expr expr) {
         return switch (expr) {
-            case Expr.Lit(_) -> false;
+            case Expr.Lit(int ignoredX) -> false;
             case Expr.Add(Expr left, Expr right) -> containsNeg(left) || containsNeg(right);
             case Expr.Mul(Expr left, Expr right) -> containsNeg(left) || containsNeg(right);
-            case Expr.Neg(_) -> true;
+            case Expr.Neg(Expr ignoredInner) -> true;
         };
     }
 }

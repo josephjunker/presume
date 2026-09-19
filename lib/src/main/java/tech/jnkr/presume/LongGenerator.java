@@ -52,13 +52,20 @@ public class LongGenerator extends AbstractGenerator<Long> implements PrimitiveG
                                     + " maximum. Minimum value: %d, maximum value: %d",
                             minimum, maximum));
 
-        return Math.clamp(
+        // Note: the switch is hoisted out of the Math.clamp call because passing a switch
+        // expression as an overloaded method argument crashes javac 21.
+        long unclamped =
                 switch (atom1) {
-                    case Trivial1(), Trivial2() -> approaching;
-                    case Regular(int magnitude, boolean sign, _) ->
+                    case Trivial1 ignoredT1 -> approaching;
+                    case Trivial2 ignoredT2 -> approaching;
+                    case Regular(int magnitude, boolean sign, boolean ignoredSimplify) ->
                             switch (atom2) {
-                                case Trivial1(), Trivial2() -> sign ? magnitude : -magnitude;
-                                case Regular(int secondMagnitude, _, _) -> {
+                                case Trivial1 ignoredT1 -> sign ? magnitude : -magnitude;
+                                case Trivial2 ignoredT2 -> sign ? magnitude : -magnitude;
+                                case Regular(
+                                                int secondMagnitude,
+                                                boolean ignoredSecondSign,
+                                                boolean ignoredSecondSimplify) -> {
                                     long unscaled = ((long) magnitude << 31) | secondMagnitude;
 
                                     if (minimum >= 0) {
@@ -74,7 +81,8 @@ public class LongGenerator extends AbstractGenerator<Long> implements PrimitiveG
                                         yield -scale(unscaled, -(double) minimum);
                                     }
                                 }
-                                case Edge(_, _) -> sign ? magnitude : -magnitude;
+                                case Edge(int ignoredEdgeMagnitude, boolean ignoredEdgeSign) ->
+                                        sign ? magnitude : -magnitude;
                             };
                     case Edge(int magnitude, boolean sign) -> {
                         if (magnitude < oneThirdMaxInt) yield approaching;
@@ -82,9 +90,8 @@ public class LongGenerator extends AbstractGenerator<Long> implements PrimitiveG
                             yield sign ? approaching - 1 : approaching + 1;
                         yield sign ? minimum : maximum;
                     }
-                },
-                minimum,
-                maximum - 1);
+                };
+        return Math.clamp(unclamped, minimum, maximum - 1);
     }
 
     private long scale(long magnitude, double range) {

@@ -167,8 +167,8 @@ public class Shrinker<T> {
 
     private Stream<DrawAtom> shrinkAtom(DrawAtom atom, boolean useFineReductions) {
         return switch (atom) {
-            case Trivial1() -> Stream.of();
-            case Trivial2() -> Stream.of(new Trivial1());
+            case Trivial1 ignored -> Stream.of();
+            case Trivial2 ignored -> Stream.of(new Trivial1());
             case Regular(int magnitude, boolean sign, boolean simplify) -> {
                 Stream<DrawAtom> trivials = Stream.of(new Trivial1(), new Trivial2());
                 Stream<DrawAtom> flags = simplifyFlags(magnitude, sign, simplify);

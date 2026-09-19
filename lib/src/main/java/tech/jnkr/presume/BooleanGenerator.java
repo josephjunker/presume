@@ -39,8 +39,10 @@ public class BooleanGenerator extends AbstractGenerator<Boolean>
 
     private Boolean produce(DrawAtom atom) {
         return switch (atom) {
-            case Trivial1(), Trivial2() -> shrinkTarget;
-            case Regular(int magnitude, _, _) -> magnitude > cutoff ? !shrinkTarget : shrinkTarget;
+            case Trivial1 ignoredT1 -> shrinkTarget;
+            case Trivial2 ignoredT2 -> shrinkTarget;
+            case Regular(int magnitude, boolean ignoredSign, boolean ignoredSimplify) ->
+                    magnitude > cutoff ? !shrinkTarget : shrinkTarget;
             default -> !shrinkTarget;
         };
     }

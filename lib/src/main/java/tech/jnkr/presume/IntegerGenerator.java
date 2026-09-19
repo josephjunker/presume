@@ -61,10 +61,13 @@ public class IntegerGenerator extends AbstractGenerator<Integer>
                                     + " maximum. Minimum value: %d, maximum value: %d",
                             minimum, maximum));
 
-        return Math.clamp(
+        // Note: the switch is hoisted out of the Math.clamp call because passing a switch
+        // expression as an overloaded method argument crashes javac 21.
+        int unclamped =
                 switch (atom) {
-                    case Trivial1(), Trivial2() -> approaching;
-                    case Regular(int magnitude, boolean sign, _) -> {
+                    case Trivial1 ignoredT1 -> approaching;
+                    case Trivial2 ignoredT2 -> approaching;
+                    case Regular(int magnitude, boolean sign, boolean ignoredSimplify) -> {
                         if (minimum >= 0) {
                             yield minimum + scale(magnitude, maximum - minimum);
                         } else if (maximum <= 0) {
@@ -81,9 +84,8 @@ public class IntegerGenerator extends AbstractGenerator<Integer>
                             yield sign ? approaching - 1 : approaching + 1;
                         yield sign ? minimum : maximum;
                     }
-                },
-                minimum,
-                maximum - 1);
+                };
+        return Math.clamp(unclamped, minimum, maximum - 1);
     }
 
     private int scale(int magnitude, int range) {

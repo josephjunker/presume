@@ -91,7 +91,8 @@ public class DoubleGenerator extends AbstractGenerator<Double>
 
         double result =
                 switch (atom1) {
-                    case Trivial1(), Trivial2() -> approaching;
+                    case Trivial1 ignoredT1 -> approaching;
+                    case Trivial2 ignoredT2 -> approaching;
                     case Regular(int magnitude, boolean sign, boolean simplify) ->
                             generateFromMantissaAtoms(magnitude, atom2, atom3, sign, simplify);
                     case Edge(int magnitude, boolean sign) -> {
@@ -150,10 +151,10 @@ public class DoubleGenerator extends AbstractGenerator<Double>
 
     private int atomToInt(DrawAtom atom) {
         return switch (atom) {
-            case Trivial1() -> 0;
-            case Trivial2() -> 1;
-            case Regular(int magnitude, _, _) -> magnitude;
-            case Edge(_, _) -> Integer.MAX_VALUE;
+            case Trivial1 ignored -> 0;
+            case Trivial2 ignored -> 1;
+            case Regular(int magnitude, boolean ignoredSign, boolean ignoredSimplify) -> magnitude;
+            case Edge(int ignoredEdgeMagnitude, boolean ignoredEdgeSign) -> Integer.MAX_VALUE;
         };
     }
 

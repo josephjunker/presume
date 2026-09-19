@@ -264,7 +264,7 @@ public class DoubleGeneratorTests {
         AtomSource source = new AtomSource();
         DrawAtom atom = source.getAtom();
 
-        if (atom instanceof Regular(int magnitude, _, boolean simplify)) {
+        if (atom instanceof Regular(int magnitude, boolean ignoredSign, boolean simplify)) {
             return new Regular(magnitude, sign, simplify);
         }
         return getRegularWithSign(sign);
@@ -274,7 +274,7 @@ public class DoubleGeneratorTests {
         AtomSource source = new AtomSource();
         DrawAtom atom = source.getAtom();
 
-        if (atom instanceof Regular(int magnitude, boolean sign, _)) {
+        if (atom instanceof Regular(int magnitude, boolean sign, boolean ignoredSimplify)) {
             return new Regular(magnitude, sign, true);
         }
         return getSimplifiedRegular();
