@@ -8,11 +8,13 @@ Presume is a work-in-progress. Its core functionality of data generation, shrink
 
 ## Installation
 
+Presume depends on Java version 21 or newer.
+
 ```xml
 <dependency>
     <groupId>tech.jnkr</groupId>
     <artifactId>presume</artifactId>
-    <version>0.1.0</version>
+    <version>0.1.1</version>
 </dependency>
 ```
 
