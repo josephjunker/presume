@@ -51,6 +51,7 @@ dependencies {
     api("org.jspecify:jspecify:1.0.0")
 
     testImplementation(libs.junit.jupiter)
+    testImplementation("org.assertj:assertj-core:3.27.7")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
