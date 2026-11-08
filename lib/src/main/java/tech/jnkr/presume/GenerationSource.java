@@ -72,6 +72,10 @@ public interface GenerationSource {
 
     DoubleGenerator doubleGen();
 
+    char getCharacter();
+
+    CharacterGenerator characterGen();
+
     <T> T call(AbstractGenerator<T> generator);
 
     default <T> T oneOfLeftBiased(List<AbstractGenerator<T>> generators) {

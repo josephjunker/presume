@@ -23,6 +23,7 @@ class ReplayingSource implements GenerationSource {
     private final LongGenerator longGenerator = new LongGenerator(this::getAtom);
     private final FloatGenerator floatGenerator = new FloatGenerator(this::getAtom);
     private final DoubleGenerator doubleGenerator = new DoubleGenerator(this::getAtom);
+    private final CharacterGenerator characterGenerator = new CharacterGenerator(this::getAtom);
 
     public ReplayingSource(History history, MutableRoseTree<ArrayList<TraceEntry>> trace) {
         this.atomCursor = ListZipper.from(ImmutableList.fromList(history.contents.value));
@@ -108,6 +109,16 @@ class ReplayingSource implements GenerationSource {
     @Override
     public DoubleGenerator doubleGen() {
         return doubleGenerator;
+    }
+
+    @Override
+    public char getCharacter() {
+        return characterGenerator.genPrimitive();
+    }
+
+    @Override
+    public CharacterGenerator characterGen() {
+        return characterGenerator;
     }
 
     @Override
